@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>California — A Family Expedition</title>
+
+<!-- ── cache-buster: always serve the freshest published build ──────────────
+     GitHub Pages (and the browser) cache the HTML, so a plain link can show an
+     old version after you push. This bounces a stale visitor to the newest
+     build automatically. Bump BUILD_ID on every publish (Claude bumps it on
+     each edit). -->
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<script>
+(function(){
+  var BUILD_ID = "2026-06-11c";                       // ← newest published build
+  try{
+    var here = new URL(location.href);
+    if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
+    fetch(location.pathname + "?_=" + Date.now(), {cache:"no-store"})
+      .then(function(r){ return r.text(); })
+      .then(function(html){
+        var m = html.match(/BUILD_ID\s*=\s*"([^"]+)"/);    // read live build id
+        if (m && m[1] !== BUILD_ID){                        // a newer one exists
+          here.searchParams.set("v", m[1]);
+          location.replace(here.toString());                // refresh to it
+        }
+      })
+      .catch(function(){});                                 // offline / file:// → keep current
+  }catch(e){}
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE2C9; --paper-deep:#E4D6B4; --panel:#F5EEDC; --panel-edge:#3B311F;
+    --ink:#3B311F; --ink-soft:#6B5E45; --sea:#C4D5CC; --sea-deep:#AFC6BD;
+    --route:#A23B2B; --green:#B8C698; --gold:#A8812F; --stamp:#9E2F23;
+    --serif:'IM Fell English', Georgia, serif;
+    --sc:'IM Fell English SC', Georgia, serif;
+    --body:'Spectral', Georgia, serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%; overflow:hidden; overscroll-behavior:none}
+  body{
+    position:fixed; inset:0; width:100%;
+    font-family:var(--body); color:var(--ink); background:var(--sea);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #map{position:fixed; inset:0; width:100%; height:100%; touch-action:none; cursor:grab; display:block}
+  #map.dragging{cursor:grabbing}
+
+  /* ── shared panel chrome ───────────────────────────── */
+  .panel{
+    position:fixed; background:var(--panel); color:var(--ink);
+    border:1.5px solid var(--panel-edge); box-shadow:0 2px 0 rgba(59,49,31,.25);
+    padding:14px 16px;
+  }
+  .panel::before{
+    content:""; position:absolute; inset:4px; pointer-events:none;
+    border:1px solid rgba(59,49,31,.45);
+  }
+  .eyebrow{
+    font-family:var(--body); font-size:10px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--stamp); font-weight:600;
+  }
+  button{font-family:var(--body); color:var(--ink); background:none; border:none; cursor:pointer}
+  a.chip{text-decoration:none; display:inline-block; color:var(--ink)}
+
+  /* roads */
+  .hwy{stroke:#8A5A3C; stroke-width:1.6; fill:none; opacity:.7; vector-effect:non-scaling-stroke; stroke-linejoin:round}
+  .roadlbl text{
+    font-family:var(--body); font-size:8.5px; font-weight:600; letter-spacing:.12em;
+    fill:#7A4F33; text-anchor:middle; paint-order:stroke; stroke:var(--paper);
+    stroke-width:2.6px; stroke-linejoin:round; text-transform:uppercase;
+  }
+  .roadlbl.st text{fill:var(--ink-soft)}
+  #gHighways{transition:opacity .3s ease}
+  #map.z-far #gHighways{opacity:0; pointer-events:none}
+
+  /* ── title cartouche ───────────────────────────────── */
+  #cartouche{top:max(48px,calc(env(safe-area-inset-top) + 14px)); left:max(14px,env(safe-area-inset-left)); max-width:330px; z-index:5}
+  #cartouche h1{font-family:var(--sc); font-weight:400; font-size:34px; line-height:1; margin:4px 0 2px}
+  #cartouche .sub{font-style:italic; font-size:13.5px; color:var(--ink-soft); line-height:1.35}
+  #cartouche .rule{height:1px; background:var(--ink); opacity:.5; margin:9px 0 7px}
+  #cartouche .stats{font-size:11px; letter-spacing:.06em; color:var(--ink-soft)}
+  #cartouche .stats b{color:var(--stamp); font-weight:600}
+  #cartouche .hint{font-size:11px; font-style:italic; color:var(--ink-soft); margin-top:6px}
+
+  /* ── controls (bottom centre) ──────────────────────── */
+  #controls{
+    position:fixed; left:50%; bottom:max(12px,env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:16; display:flex; flex-wrap:wrap; gap:7px; justify-content:center; align-items:center;
+    max-width:calc(100vw - 18px);
+    background:rgba(237,226,201,.92); border:1.5px solid var(--panel-edge);
+    padding:7px 8px; box-shadow:0 2px 0 rgba(59,49,31,.28);
+  }
+  .ctl-row{display:flex; gap:6px}
+  .chip{
+    background:var(--panel); border:1.5px solid var(--panel-edge);
+    box-shadow:0 2px 0 rgba(59,49,31,.25); padding:7px 11px;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:600;
+  }
+  .chip:active{transform:translateY(1px); box-shadow:0 1px 0 rgba(59,49,31,.25)}
+  .chip.round{width:34px; padding:7px 0; text-align:center; font-size:15px; line-height:1}
+  .chip.primary{background:var(--ink); color:var(--panel)}
+  .chip.live{background:var(--stamp); color:#FBF6E9; border-color:var(--stamp)}
+
+  /* you-are-here marker */
+  #youAcc{fill:var(--stamp); opacity:.08; stroke:var(--stamp); stroke-width:1; stroke-dasharray:3 3; vector-effect:non-scaling-stroke}
+  #youMarker .core{fill:var(--stamp); stroke:#FBF6E9; stroke-width:1.6}
+  #youMarker .pulse{fill:none; stroke:var(--stamp); stroke-width:1.4; animation:youpulse 2.2s ease-out infinite}
+  #youMarker text{
+    font-family:var(--body); font-size:9px; font-weight:600; letter-spacing:.18em;
+    fill:var(--stamp); text-anchor:middle; paint-order:stroke; stroke:var(--paper);
+    stroke-width:3px; stroke-linejoin:round;
+  }
+  @keyframes youpulse{ 0%{r:5; opacity:.8} 100%{r:16; opacity:0} }
+  @media (prefers-reduced-motion:reduce){ #youMarker .pulse{animation:none; r:8; opacity:.4} }
+
+  /* toast */
+  #toast{
+    position:fixed; left:50%; bottom:64px; transform:translateX(-50%) translateY(8px); z-index:30;
+    background:var(--ink); color:var(--panel); padding:9px 16px; font-size:13px; font-style:italic;
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; max-width:86vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* ── slide-out dock ────────────────────────────────── */
+  #dock{
+    position:fixed; top:0; right:0; bottom:0; width:min(86vw,340px); z-index:20;
+    background:var(--panel); border-left:1.5px solid var(--panel-edge);
+    box-shadow:-4px 0 14px rgba(59,49,31,.22);
+    transform:translateX(105%); transition:transform .28s ease;
+    display:flex; flex-direction:column;
+  }
+  #dock.open{transform:translateX(0)}
+  #dock header{padding:14px 16px 0}
+  #dock .tabs{display:flex; gap:0; margin-top:10px; border-bottom:1.5px solid var(--panel-edge)}
+  #dock .tabs button{
+    flex:1; padding:8px 0; font-size:11.5px; letter-spacing:.18em; text-transform:uppercase;
+    font-weight:600; color:var(--ink-soft); border-bottom:3px solid transparent; margin-bottom:-1.5px;
+  }
+  #dock .tabs button.active{color:var(--ink); border-bottom-color:var(--stamp)}
+  #dock .tabpane{flex:1; overflow-y:auto; padding:12px 16px 28px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
+  #dock .closer{position:absolute; top:10px; right:12px; font-size:20px; line-height:1; padding:4px 6px; color:var(--ink-soft)}
+
+  #search{
+    width:100%; padding:9px 10px; font-family:var(--body); font-size:14px;
+    background:#FBF6E9; border:1.5px solid var(--panel-edge); color:var(--ink); outline:none;
+  }
+  #search::placeholder{font-style:italic; color:#9b8c6c}
+
+  .layerbox{margin:12px 0 4px; padding:10px; border:1px solid rgba(59,49,31,.4); background:rgba(59,49,31,.04)}
+  .layerbox .eyebrow{display:block; margin-bottom:7px}
+  .layerbox label{
+    display:inline-flex; align-items:center; gap:5px; font-size:12.5px;
+    margin:2px 12px 2px 0; cursor:pointer; user-select:none;
+  }
+  .layerbox input{accent-color:var(--stamp)}
+  .layerbox summary{cursor:pointer; list-style:none}
+  .layerbox summary::-webkit-details-marker{display:none}
+  .layerbox summary::after{content:" ▸"; color:var(--ink-soft)}
+  .layerbox[open] summary::after{content:" ▾"}
+  .key{display:inline-block; width:11px; height:11px; vertical-align:-1px; margin-right:1px}
+  .key.famous{background:var(--panel); border:1.6px solid var(--ink); border-radius:50%}
+  .key.hidden{background:#6E8B86; border:1.4px solid var(--ink); border-radius:50%}
+  .key.food{background:var(--gold); border:1.2px solid var(--ink); transform:rotate(45deg)}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:7px}
+  .ichip{
+    font-size:11px; letter-spacing:.04em; padding:4px 9px; border:1.2px solid var(--panel-edge);
+    background:#FBF6E9; color:var(--ink-soft); border-radius:2px; cursor:pointer; user-select:none;
+  }
+  .ichip.on{background:var(--stamp); color:#FBF6E9; border-color:var(--stamp)}
+
+  .grp{margin-top:14px}
+  .grp h4{
+    font-family:var(--sc); font-weight:400; font-size:16px; letter-spacing:.04em;
+    border-bottom:1px solid rgba(59,49,31,.45); padding-bottom:3px; margin-bottom:4px;
+  }
+  .idx-item{
+    display:flex; width:100%; text-align:left; align-items:baseline; gap:8px;
+    padding:6.5px 4px; border-bottom:1px dotted rgba(59,49,31,.3); font-size:14px;
+  }
+  .idx-item:active{background:rgba(162,59,43,.08)}
+  .idx-item .nm{flex:1}
+  .idx-item .ct{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap}
+  .nores{font-style:italic; color:var(--ink-soft); padding:14px 4px; font-size:13.5px}
+
+  /* plan tab */
+  .plan-note{font-size:12px; font-style:italic; color:var(--ink-soft); line-height:1.45; margin-bottom:10px}
+  .plan-note code{font-family:ui-monospace,monospace; font-style:normal; font-size:11px; background:rgba(59,49,31,.08); padding:1px 4px}
+  .day{display:flex; gap:10px; padding:9px 2px; border-bottom:1px dotted rgba(59,49,31,.3); align-items:baseline}
+  .day .badge{
+    font-family:var(--sc); font-size:13px; min-width:46px; text-align:center;
+    border:1.5px solid var(--ink); padding:2px 4px; background:#FBF6E9; flex:none;
+  }
+  .day .ttl{flex:1; font-size:14px; line-height:1.3; text-align:left; cursor:pointer}
+  .day .ttl small{display:block; font-size:11px; color:var(--ink-soft); font-style:italic}
+  .day .rm{color:var(--ink-soft); font-size:15px; padding:0 4px}
+  .day.sample .badge{border-style:dashed; color:var(--ink-soft)}
+
+  /* ── landmark card ─────────────────────────────────── */
+  #card{
+    left:14px; bottom:64px; max-width:340px; z-index:15; display:none;
+  }
+  #card.open{display:block}
+  #card h3{font-family:var(--sc); font-weight:400; font-size:24px; line-height:1.05; margin:3px 0 7px}
+  #card .hist{font-size:13.5px; line-height:1.5}
+  #card .fact{
+    margin-top:9px; padding:8px 10px; font-size:13px; line-height:1.45;
+    background:rgba(162,59,43,.07); border-left:3px solid var(--stamp);
+  }
+  #card .fact b{font-family:var(--sc); font-weight:400; letter-spacing:.06em; color:var(--stamp)}
+  #card .tip{margin-top:8px; font-size:12.5px; font-style:italic; color:var(--ink-soft); line-height:1.4}
+  #card .btns{display:flex; gap:8px; margin-top:11px}
+  #card .btns .chip{font-size:10.5px; padding:6px 10px}
+  #card .closer{position:absolute; top:8px; right:10px; font-size:18px; color:var(--ink-soft); padding:2px 5px}
+
+  /* ── bottom status bar ─────────────────────────────── */
+  #status{
+    position:fixed; left:14px; bottom:10px; z-index:4;
+    background:var(--panel); border:1.5px solid var(--panel-edge);
+    padding:4px 14px; font-size:11px; letter-spacing:.08em; color:var(--ink-soft); white-space:nowrap;
+  }
+
+  /* ── SVG map styling ───────────────────────────────── */
+  .land{fill:var(--paper); stroke:var(--ink); stroke-width:1.4; vector-effect:non-scaling-stroke}
+  .island{fill:var(--paper); stroke:var(--ink); stroke-width:1; vector-effect:non-scaling-stroke}
+  .park{fill:var(--green); stroke:var(--ink); stroke-width:.6; vector-effect:non-scaling-stroke; opacity:.9}
+  .grat{stroke:var(--ink); stroke-width:.6; opacity:.3; vector-effect:non-scaling-stroke}
+  .ridge{stroke:var(--ink); fill:none; opacity:.32; vector-effect:non-scaling-stroke; stroke-width:.9}
+  .border-line{stroke:var(--ink); stroke-width:1; stroke-dasharray:6 3; opacity:.5; vector-effect:non-scaling-stroke; fill:none}
+  #routePath{
+    stroke:var(--route); stroke-width:2.2; fill:none; stroke-dasharray:7 5;
+    stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.9;
+  }
+  .geo-label{
+    font-family:var(--serif); font-style:italic; fill:var(--ink-soft); opacity:.6;
+    letter-spacing:.45em; text-anchor:middle;
+  }
+  .state-label{font-family:var(--body); font-style:normal; letter-spacing:.3em; opacity:.4}
+  .marker{cursor:pointer}
+  .marker circle.dot{fill:var(--panel); stroke:var(--ink); stroke-width:1.6}
+  .marker.kind-coast circle.dot{fill:#FBF6E9; stroke:var(--route)}
+  .marker.t-hidden circle.dot{fill:#6E8B86; stroke:var(--ink)}
+  .marker.t-hidden .halo{stroke-dasharray:2 2}
+  .marker.t-food .dot{fill:var(--gold); stroke:var(--ink); stroke-width:1.4}
+  .marker.t-food text, .marker.t-hidden text{font-size:9.5px}
+  .marker text{
+    font-family:var(--body); font-size:10.5px; font-weight:600; letter-spacing:.05em;
+    fill:var(--ink); paint-order:stroke; stroke:var(--paper); stroke-width:3px;
+    stroke-linejoin:round; text-anchor:middle;
+  }
+  .plaque{cursor:pointer}
+  .plaque text{
+    font-family:'IM Fell English SC', Georgia, serif; fill:var(--ink);
+    text-anchor:middle; paint-order:stroke; stroke:var(--paper); stroke-width:4px; stroke-linejoin:round;
+  }
+  .plaque .pl-sub{font-family:var(--body); font-size:8.5px; letter-spacing:.22em; fill:var(--ink-soft)}
+  .plaque line{stroke:var(--ink); stroke-width:.8; opacity:.6}
+
+  /* level-of-detail: classes set on <svg> root */
+  #gLandmarks, #gPlaques, #gGeoLabels{transition:opacity .3s ease}
+  #map.z-state #gLandmarks{opacity:0; pointer-events:none}
+  #gCoastStops text{transition:opacity .3s ease}
+  #map.z-far #gCoastStops text{opacity:0}
+  #map.z-city  #gPlaques{opacity:0; pointer-events:none}
+  #map.z-city  #gGeoLabels{opacity:0}
+
+  /* ── measure tool ──────────────────────────────────── */
+  #measOut{
+    top:max(48px,calc(env(safe-area-inset-top) + 14px)); left:50%; transform:translateX(-50%);
+    z-index:17; display:none; flex-direction:column; align-items:center; gap:4px;
+    padding:9px 16px; text-align:center; max-width:min(92vw,300px);
+  }
+  #measOut.show{display:flex}
+  #measOut b{font-family:var(--sc); font-weight:400; font-size:16px; color:var(--stamp); letter-spacing:.02em}
+  #measOut .sub{font-size:11px; color:var(--ink-soft); font-style:italic; line-height:1.35}
+  #measOut #measClear{
+    margin-top:3px; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-soft); border:1px solid var(--panel-edge); padding:4px 9px;
+  }
+  .mpin-core{fill:var(--stamp); stroke:#FBF6E9; stroke-width:1.6}
+  .mpin text{
+    font-family:var(--body); font-size:10px; font-weight:600; fill:var(--stamp); text-anchor:middle;
+    paint-order:stroke; stroke:var(--paper); stroke-width:3px; stroke-linejoin:round;
+  }
+  .mline{stroke:var(--stamp); stroke-width:1.8; stroke-dasharray:2 4; fill:none; opacity:.85; vector-effect:non-scaling-stroke}
+
+  /* ── responsive ────────────────────────────────────── */
+  @media (max-width:760px){
+    #cartouche{max-width:230px; padding:10px 12px}
+    #cartouche h1{font-size:24px}
+    #cartouche .sub,#cartouche .hint{display:none}
+    #cartouche .rule{margin:6px 0 5px}
+    #card{left:8px; right:8px; bottom:calc(112px + env(safe-area-inset-bottom)); max-width:none}
+    #status{display:none}
+    #controls{gap:6px; padding:6px}
+    .chip{padding:8px 9px}
+    .chip.round{width:32px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    #dock,#gLandmarks,#gPlaques,#gGeoLabels{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<svg id="map" preserveAspectRatio="xMidYMid meet" aria-label="Interactive map of California">
+  <rect id="seaRect" x="-2000" y="-2000" width="6000" height="6000" fill="var(--sea)"/>
+  <g id="gGrat"></g>
+  <g id="gLand"></g>
+  <g id="gParks"></g>
+  <g id="gRidges"></g>
+  <g id="gGeoLabels"></g>
+  <g id="gRoads"><g id="gHighways"></g></g>
+  <g id="gRoute"></g>
+  <g id="gCoastStops"></g>
+  <g id="gPlaques"></g>
+  <g id="gLandmarks"></g>
+  <g id="gMeasure"></g>
+  <g id="gYou"></g>
+</svg>
+
+<div id="toast" role="status"></div>
+
+<div class="panel" id="cartouche">
+  <span class="eyebrow">United States — West Coast —</span>
+  <h1>California</h1>
+  <p class="sub">The Golden State, charted for two young explorers — San&nbsp;Francisco · Solvang · Los&nbsp;Angeles · San&nbsp;Diego, and the coast road between.</p>
+  <div class="rule"></div>
+  <p class="stats"><span id="lmCount"></span> landmarks · <span id="foodCount"></span> food spots · <span id="hiddenCount"></span> hidden gems</p>
+  <p class="hint">Tap a city to fly in · open the Index to show food &amp; hidden gems or filter by interest · tap any marker for its story.</p>
+</div>
+
+<div id="controls">
+  <div class="ctl-row">
+    <button class="chip primary" id="dockBtn">☰ Index</button>
+    <button class="chip primary" id="planBtn">▦ Plan</button>
+  </div>
+  <div class="ctl-row">
+    <button class="chip" data-fly="sf">SF</button>
+    <button class="chip" data-fly="la">LA</button>
+    <button class="chip" data-fly="sd">SD</button>
+    <button class="chip round" id="zoomHome" title="Whole state">⌂</button>
+  </div>
+  <div class="ctl-row">
+    <button class="chip round" id="zoomIn">+</button>
+    <button class="chip round" id="zoomOut">−</button>
+    <button class="chip round" id="locBtn" title="Show my location">◎</button>
+  </div>
+  <div class="ctl-row">
+    <button class="chip" id="measBtn" title="Measure distance &amp; approximate drive time">📏 Measure</button>
+  </div>
+</div>
+
+<aside id="dock" aria-label="Index and trip plan">
+  <header>
+    <span class="eyebrow">Expedition Records</span>
+    <button class="closer" id="dockClose" aria-label="Close">×</button>
+    <div class="tabs">
+      <button id="tabIndex" class="active">Index</button>
+      <button id="tabPlan">The Plan</button>
+    </div>
+  </header>
+  <div class="tabpane" id="paneIndex">
+    <input id="search" type="search" placeholder="Search anything, e.g. ‘Alcatraz’ or ‘tacos’…" autocomplete="off">
+
+    <div class="layerbox">
+      <span class="eyebrow">Show on map</span>
+      <label><input type="checkbox" id="tierFamous" checked> <span class="key famous"></span> Famous spots</label>
+      <label><input type="checkbox" id="tierHidden"> <span class="key hidden"></span> Hidden gems &amp; oddities</label>
+      <label><input type="checkbox" id="tierFood"> <span class="key food"></span> Food &amp; treats</label>
+    </div>
+
+    <div class="layerbox">
+      <span class="eyebrow">Show by interest</span>
+      <div id="interestChips" class="chips"></div>
+    </div>
+
+    <details class="layerbox">
+      <summary class="eyebrow">Map layers — turn off for speed</summary>
+      <div style="margin-top:7px">
+        <label><input type="checkbox" id="lyTerrain" checked> Terrain</label>
+        <label><input type="checkbox" id="lyRoads"> Roads</label>
+        <label><input type="checkbox" id="lyRoute" checked> Route</label>
+        <label><input type="checkbox" id="lyGrid"> Grid</label>
+        <label><input type="checkbox" id="lyGeo" checked> Place names</label>
+      </div>
+    </details>
+
+    <div id="idxList"></div>
+  </div>
+  <div class="tabpane" id="panePlan" style="display:none">
+    <p class="plan-note">The road-trip route, June 17–26. Tap a day to fly to that leg of the trip. To change the schedule, edit the <code>ITINERARY</code> list at the top of this file.</p>
+    <div id="planList"></div>
+  </div>
+</aside>
+
+<div class="panel" id="card">
+  <button class="closer" id="cardClose" aria-label="Close">×</button>
+  <span class="eyebrow" id="cEyebrow"></span>
+  <h3 id="cName"></h3>
+  <p class="hist" id="cHist"></p>
+  <div class="fact"><b>Wow —</b> <span id="cFact"></span></div>
+  <p class="tip" id="cTip"></p>
+  <div class="btns">
+    <a class="chip" id="cWiki" target="_blank" rel="noopener">Wikipedia ↗</a>
+  </div>
+</div>
+
+<div class="panel" id="measOut" role="status">
+  <b id="measMain"></b>
+  <span class="sub" id="measSub"></span>
+  <button id="measClear">Clear</button>
+</div>
+
+<div id="status"><span id="stCoords">—</span> · view ≈ <span id="stScale"></span> mi across</div>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════
+   YOUR TRIP PLAN — EDIT HERE
+   One line per day. Optional keys: `landmark` (an id from
+   LANDMARKS), `city` ("sf"/"la"/"sd"), or `bounds` for a custom
+   fly-to region. Tapping a day flies the map to that leg.
+   ═══════════════════════════════════════════════════════════════ */
+const ITINERARY = [
+  { day:1, date:"Wed 6/17", title:"Boston → San Francisco · Club Wyndham Canterbury", city:"sf" },
+  { day:2, date:"Thu 6/18", title:"San Francisco · Club Wyndham Canterbury", city:"sf" },
+  { day:3, date:"Fri 6/19", title:"Highway 1 — SF → Solvang · Royal Copenhagen Inn", bounds:[[34.45,-122.7],[37.7,-119.9]] },
+  { day:4, date:"Sat 6/20", title:"Solvang → Anaheim, via Santa Barbara & Malibu · Peacock Suites", bounds:[[33.7,-120.4],[34.75,-117.8]] },
+  { day:5, date:"Sun 6/21", title:"Los Angeles day · Peacock Suites", city:"la" },
+  { day:6, date:"Mon 6/22", title:"Universal Studios · Peacock Suites", landmark:"universal" },
+  { day:7, date:"Tue 6/23", title:"Anaheim → San Diego, via Newport, Laguna & La Jolla · Inn at the Park", bounds:[[32.6,-118.0],[33.75,-117.0]] },
+  { day:8, date:"Wed 6/24", title:"San Diego — Coronado, Old Town, Gaslamp · Inn at the Park", city:"sd" },
+  { day:9, date:"Thu 6/25", title:"Balboa Park & Zoo → red-eye SAN → BOS", landmark:"balboa" },
+];
+
+/* ═══════ CITIES ═══════ */
+const CITIES = {
+  sf:    { name: "San Francisco", bounds: [[37.69,-122.56],[37.88,-122.34]], plaque:[37.745,-122.50] },
+  coast: { name: "The Coast Road", bounds: [[34.3,-122.7],[37.2,-119.9]] },
+  la:    { name: "Los Angeles",   bounds: [[33.70,-118.62],[34.22,-117.82]], plaque:[34.02,-118.36] },
+  sd:    { name: "San Diego",     bounds: [[32.53,-117.42],[33.20,-117.02]], plaque:[32.78,-117.30] },
+};
+
+/* ═══════ LANDMARKS  (id · city · name · category · lat · lon · history · wow fact · tip) ═══════ */
+const LANDMARKS = [
+// ── San Francisco ──
+{ id:"ggbridge", city:"sf", name:"Golden Gate Bridge", cat:"Bridge", lat:37.8199, lon:-122.4783,
+  hist:"When it opened in 1937 it was the longest suspension bridge on Earth, thrown across a strait sailors had named the “Golden Gate” long before anyone found gold. Many engineers swore the tides, wind and fog made it impossible to build.",
+  fact:"Its color, “International Orange,” was chosen so ships can spot it in fog — and crews repaint it year-round, forever.",
+  tip:"Walk out from the Welcome Plaza on the east sidewalk; or bike across and ferry back from Sausalito." },
+{ id:"alcatraz", city:"sf", name:"Alcatraz Island", cat:"Island prison", lat:37.8270, lon:-122.4230,
+  hist:"First a Civil War fort, then America’s most famous prison from 1934 to 1963, holding Al Capone among others. The freezing bay currents were considered escape-proof.",
+  fact:"In 1962 three inmates slipped out through widened vents on a raft made of raincoats. They were never found.",
+  tip:"Boats sell out days ahead — book early. The audio tour is narrated by real former guards and inmates." },
+{ id:"pier39", city:"sf", name:"Pier 39 Sea Lions", cat:"Wildlife", lat:37.8087, lon:-122.4098,
+  hist:"In 1989, right after the big earthquake, wild California sea lions began hauling out on K-Dock — and simply never left. The marina surrendered and gave them the floats.",
+  fact:"At their peak, more than 1,700 sea lions have crowded the docks at once. Loud, smelly, and completely free to watch.",
+  tip:"" },
+{ id:"cablecar", city:"sf", name:"Cable Car Turnaround", cat:"Ride", lat:37.7847, lon:-122.4079,
+  hist:"Andrew Hallidie built the first line in 1873 after watching horses fall on the wet hills. The cars still have no engine — a grip under the floor grabs a steel cable that runs beneath the street.",
+  fact:"The whole system moves at exactly 9.5 mph, and the brakes are pine blocks that wear out in days.",
+  tip:"Ride the Powell–Hyde line and watch the crew spin the car on the wooden turntable at the end." },
+{ id:"lombard", city:"sf", name:"Lombard Street", cat:"Crooked street", lat:37.8021, lon:-122.4187,
+  hist:"In the 1920s cars couldn’t manage Russian Hill’s 27% slope, so the city folded one block into eight hairpin switchbacks lined with hydrangeas.",
+  fact:"It’s called the crookedest street in the world — though locals know Vermont Street across town is secretly sharper.",
+  tip:"" },
+{ id:"ggpark", city:"sf", name:"Golden Gate Park & Academy of Sciences", cat:"Park · museum", lat:37.7699, lon:-122.4661,
+  hist:"In the 1870s engineers turned miles of bare sand dunes into a park bigger than New York’s Central Park. Inside today is the California Academy of Sciences — aquarium, planetarium and a four-story rainforest under one living roof.",
+  fact:"A real bison herd has lived in the park since 1891.",
+  tip:"" },
+{ id:"explor", city:"sf", name:"Exploratorium", cat:"Hands-on science", lat:37.8017, lon:-122.3973,
+  hist:"Founded in 1969 by physicist Frank Oppenheimer on one rule: every exhibit must be touched. It practically invented the hands-on science museum.",
+  fact:"600+ experiments, most built in the museum’s own workshop — which you can watch through the glass.",
+  tip:"" },
+{ id:"chinatown", city:"sf", name:"Chinatown", cat:"Historic district", lat:37.7941, lon:-122.4078,
+  hist:"The oldest Chinatown in North America, founded during the 1840s Gold Rush and rebuilt by its own community after the 1906 earthquake and fire flattened it.",
+  fact:"At the Golden Gate Fortune Cookie Factory you can watch cookies folded by hand — and snack on the flat “mistakes.”",
+  tip:"" },
+
+{ id:"palace", city:"sf", name:"Palace of Fine Arts", cat:"Monument", lat:37.8029, lon:-122.4484,
+  hist:"Built for the 1915 world’s fair to look like a crumbling Roman temple reflected in a lagoon. Every other fair palace was torn down — San Franciscans loved this one too much to let it go.",
+  fact:"A short walk away, outside Lucasfilm’s headquarters in the Presidio, stands the Yoda Fountain.",
+  tip:"Pairs naturally with a Golden Gate Bridge stop — Baker Beach and Fort Point have the classic views." },
+{ id:"ferrybldg", city:"sf", name:"Ferry Building Marketplace", cat:"Food hall · landmark", lat:37.7955, lon:-122.3937,
+  hist:"Opened in 1898 with a 245-foot clock tower copied from a cathedral in Seville. Before the bridges existed, 50,000 commuters a day poured through on ferries — and it survived both great earthquakes.",
+  fact:"It’s now a food hall: one-of-a-kind Filipino burritos at Señor Sisig, crêpes next door.",
+  tip:"Ride the cable car down to Embarcadero and you land right here." },
+
+// ── The Coast Road ──
+{ id:"halfmoonbay", city:"coast", name:"Half Moon Bay", cat:"Harbor town", lat:37.4636, lon:-122.4286,
+  hist:"A foggy farm-and-harbor town famous for two things: giant pumpkins, and Mavericks — the big-wave surf break offshore where winter swells can top 60 feet.",
+  fact:"Its pumpkin festival crowns champions weighing over 2,000 pounds.",
+  tip:"" },
+{ id:"santacruz", city:"coast", name:"Santa Cruz Beach Boardwalk", cat:"Amusement park", lat:36.9643, lon:-122.0173,
+  hist:"California’s oldest amusement park, open since 1907 — a classic wooden seaside boardwalk that survived when nearly all the others vanished.",
+  fact:"The Giant Dipper coaster has rattled riders since 1924; it’s a National Historic Landmark you can still ride.",
+  tip:"" },
+{ id:"monterey", city:"coast", name:"Monterey Bay Aquarium", cat:"Aquarium", lat:36.6182, lon:-121.9018,
+  hist:"Built inside an old sardine cannery on Cannery Row — the street John Steinbeck made famous — and opened in 1984. Its living kelp forest helped invent the modern aquarium.",
+  fact:"The kelp tank is three stories tall, and most of the sea otters were rescued as orphaned pups.",
+  tip:"" },
+{ id:"carmel", city:"coast", name:"Carmel-by-the-Sea", cat:"Storybook village", lat:36.5552, lon:-121.9233,
+  hist:"A village of crooked fairy-tale cottages with no street addresses — residents collect their mail at the post office. Movie star Clint Eastwood was once its mayor.",
+  fact:"An old town law technically requires a permit to wear high heels — written to dodge lawsuits over the bumpy cobblestones.",
+  tip:"The white-sand beach at the foot of Ocean Avenue is dog-and-kid heaven." },
+{ id:"bixby", city:"coast", name:"Bixby Bridge · Big Sur", cat:"Scenic bridge", lat:36.3715, lon:-121.9016,
+  hist:"Finished in 1932 to connect Big Sur to the world — before it, residents were cut off for whole winters. Now one of the most photographed bridges anywhere.",
+  fact:"It soars about 260 feet above the creek — taller than a 20-story building.",
+  tip:"The pull-outs fill fast; mornings are calmer." },
+{ id:"mcway", city:"coast", name:"McWay Falls", cat:"Waterfall", lat:36.1578, lon:-121.6722,
+  hist:"An 80-foot waterfall that pours straight onto a beach nobody is allowed to touch — the cove is protected, so you admire it from a short overlook trail. One of the few “tidefalls” on Earth.",
+  fact:"The beach below didn’t exist until a 1983 landslide; the ocean built it out of the rubble.",
+  tip:"" },
+{ id:"elephantseals", city:"coast", name:"Elephant Seal Beach · Piedras Blancas", cat:"Wildlife", lat:35.6628, lon:-121.2570,
+  hist:"Thousands of northern elephant seals haul out here to molt, nap and bellow. Around 1900 fewer than 100 were left in the world; today there are over 200,000.",
+  fact:"Big males weigh up to 2 tons — as much as a car — and the boardwalk view is completely free.",
+  tip:"" },
+{ id:"hearst", city:"coast", name:"Hearst Castle", cat:"Castle", lat:35.6852, lon:-121.1681,
+  hist:"Newspaper king William Randolph Hearst spent 28 years building a 165-room castle on “La Cuesta Encantada” — the Enchanted Hill — filled with real Roman and Egyptian treasures.",
+  fact:"He kept a private zoo; descendants of his zebras still graze beside Highway 1 below.",
+  tip:"" },
+{ id:"moonstone", city:"coast", name:"Moonstone Beach · Cambria", cat:"Beach", lat:35.5719, lon:-121.1230,
+  hist:"A driftwood-strewn beach named for the polished moonstone agates that wash ashore, with a mile-long boardwalk running the bluff above it.",
+  fact:"Hunt the tideline after rough surf — that’s when the best jasper and agate pebbles turn up.",
+  tip:"" },
+{ id:"morro", city:"coast", name:"Morro Rock", cat:"Volcanic peak", lat:35.3695, lon:-120.8499,
+  hist:"A 576-foot volcanic plug — the stone throat of a volcano that died about 23 million years ago — standing guard over a small fishing harbor.",
+  fact:"Peregrine falcons nest on it, diving at up to 240 mph — the fastest animal on Earth.",
+  tip:"" },
+{ id:"solvang", city:"coast", name:"Solvang", cat:"Danish village", lat:34.5958, lon:-120.1376,
+  hist:"Founded in 1911 by Danish teachers escaping Midwest winters, who built a slice of Denmark — windmills, timbered houses, even a copy of Copenhagen’s Little Mermaid.",
+  fact:"Locals argue fiercely over which bakery makes the best æbleskiver (Danish pancake balls).",
+  tip:"" },
+{ id:"santabarbara", city:"coast", name:"Santa Barbara & Stearns Wharf", cat:"Seaside town", lat:34.4100, lon:-119.6860,
+  hist:"Rebuilt in matching Spanish-Colonial style after a 1925 earthquake — which is why the whole town looks like one red-roofed postcard. Stearns Wharf, from 1872, is the West Coast’s oldest working wooden pier.",
+  fact:"You can drive a car right onto the wooden pier. It still creaks.",
+  tip:"" },
+{ id:"newport", city:"coast", name:"Newport Beach · Balboa Island", cat:"Harbor town", lat:33.6061, lon:-117.8983,
+  hist:"A harbor town wrapped around tiny Balboa Island, reached by a three-car ferry that has been crossing since 1919.",
+  fact:"The ferry ride is about 800 feet and three minutes — and the island claims to be the birthplace of the frozen banana.",
+  tip:"Walk or bike the little bridge onto Marine Avenue, or take the ferry across with the car." },
+{ id:"laguna", city:"coast", name:"Laguna Beach", cat:"Coves & tidepools", lat:33.5427, lon:-117.7854,
+  hist:"Began as an artists’ colony in the early 1900s when painters came for the light; now it’s a string of coves, tidepools and galleries tucked between the cliffs.",
+  fact:"Every summer the town stages “Pageant of the Masters” — real people standing perfectly still inside life-size famous paintings.",
+  tip:"" },
+{ id:"encinitas", city:"coast", name:"Encinitas", cat:"Surf town", lat:33.0370, lon:-117.2920,
+  hist:"A laid-back surf town where the 1937 Self-Realization Fellowship gardens sit on the bluff — golden lotus towers, koi ponds and ocean views, free to wander.",
+  fact:"The surf break below the gardens is called Swami’s, named for the yogi who built them.",
+  tip:"The Baked Bear on Coast Hwy 101: build-your-own ice-cream-cookie sandwiches before the last leg to San Diego." },
+
+// ── Los Angeles ──
+{ id:"hollywood", city:"la", name:"Hollywood Sign", cat:"Icon", lat:34.1341, lon:-118.3215,
+  hist:"Raised in 1923 as “HOLLYWOODLAND” — a giant advertisement for a housing development meant to last 18 months. The town kept it, dropped the “LAND” in 1949, and it became the symbol of the movies.",
+  fact:"Each letter stands about 45 feet tall — a four-story building.",
+  tip:"Best easy views: Griffith Observatory lawn or Lake Hollywood Park." },
+{ id:"walkoffame", city:"la", name:"Hollywood Walk of Fame", cat:"Icon", lat:34.1017, lon:-118.3416,
+  hist:"Since 1960, more than 2,700 brass-and-terrazzo stars have been set into Hollywood Boulevard, honoring everyone from Mickey Mouse to the Apollo 11 astronauts.",
+  fact:"The Apollo 11 crew got round “moon” plaques instead of stars — find all four at Hollywood & Vine.",
+  tip:"" },
+{ id:"universal", city:"la", name:"Universal Studios", cat:"Theme park · studio", lat:34.1381, lon:-118.3534,
+  hist:"A working film studio since 1915 — back then visitors paid 25 cents to watch silent movies being shot. The theme park grew up around the real backlot.",
+  fact:"The Studio Tour drives through actual sets, a flash flood and Jaws — and Super Nintendo World hides secrets for Power-Up Band wearers everywhere.",
+  tip:"" },
+{ id:"griffith", city:"la", name:"Griffith Observatory", cat:"Observatory", lat:34.1184, lon:-118.3004,
+  hist:"Opened in 1935 as a free public observatory, by order of Griffith J. Griffith, who insisted ordinary people — not just scientists — should look through a telescope.",
+  fact:"More people have looked through its 12-inch telescope than any other telescope on Earth.",
+  tip:"Go near sunset: Hollywood Sign on one side, the whole city lighting up on the other." },
+{ id:"labrea", city:"la", name:"La Brea Tar Pits", cat:"Ice-age fossils", lat:34.0638, lon:-118.3553,
+  hist:"For 50,000 years, sticky asphalt seeps have trapped animals — mammoths, saber-toothed cats, dire wolves — preserving their bones in what is now the middle of the city.",
+  fact:"The pits still bubble today, and scientists still pull out new fossils every single year.",
+  tip:"" },
+{ id:"sciencecenter", city:"la", name:"California Science Center", cat:"Space shuttle", lat:34.0156, lon:-118.2863,
+  hist:"Home of Space Shuttle Endeavour, which flew 25 missions to orbit — including the one that fixed the Hubble telescope. It crawled through LA’s streets for three days to get here.",
+  fact:"Entry is free, and you stand directly beneath a real spaceship.",
+  tip:"" },
+{ id:"santamonica", city:"la", name:"Santa Monica Pier", cat:"Pier", lat:34.0083, lon:-118.4987,
+  hist:"Opened in 1909, the pier is the official western end of Route 66 — the 2,400-mile “Mother Road” from Chicago that carried a generation west.",
+  fact:"Pacific Park’s Ferris wheel is the only solar-powered one in the world.",
+  tip:"" },
+{ id:"venice", city:"la", name:"Venice Beach & Canals", cat:"Beach", lat:33.9850, lon:-118.4695,
+  hist:"Tobacco millionaire Abbot Kinney built a dream “Venice of America” in 1905, with real canals and gondoliers. A few quiet canals survive a short walk from the boardwalk circus.",
+  fact:"The skatepark sits right on the sand, and Muscle Beach’s outdoor gym helped invent modern fitness culture.",
+  tip:"" },
+{ id:"malibupier", city:"la", name:"Malibu Pier", cat:"Pier · beaches", lat:34.0370, lon:-118.6768,
+  hist:"A 1905 fishing pier on a coastline that was once a single private ranch — the Rindge family fought for decades to keep all of Malibu to themselves.",
+  fact:"Surfrider Beach next door was named the world’s first World Surfing Reserve.",
+  tip:"Malibu Farm’s café sits at the pier’s end; Zuma Beach is ten minutes up the coast." },
+{ id:"getty", city:"la", name:"Getty Center", cat:"Art museum", lat:34.0780, lon:-118.4741,
+  hist:"Oil tycoon J. Paul Getty left his fortune to art; this hilltop museum opened in 1997 and cost over a billion dollars — yet entry is free.",
+  fact:"You ride up the hill on a driverless tram that floats on a cushion of air.",
+  tip:"" },
+{ id:"disneyland", city:"la", name:"Disneyland · Anaheim", cat:"Theme park", lat:33.8121, lon:-117.9190,
+  hist:"The original Disney park, opened in 1955 — the only one Walt Disney himself ever walked in. Opening day was such chaos (forged tickets, melting asphalt) that staff called it “Black Sunday.”",
+  fact:"Walt kept a private apartment above the Main Street fire station; a lamp still burns in its window for him.",
+  tip:"" },
+
+// ── San Diego ──
+{ id:"sdzoo", city:"sd", name:"San Diego Zoo", cat:"Zoo", lat:32.7353, lon:-117.1490,
+  hist:"Started in 1916 with animals left over from a world’s fair — founder Dr. Harry Wegeforth heard a lion roaring across Balboa Park and decided the city needed a zoo. It pioneered open, moat-style enclosures instead of cages.",
+  fact:"Around 12,000 animals live here — and the zoo helped save the California condor when only 22 were left on Earth.",
+  tip:"" },
+{ id:"balboa", city:"sd", name:"Balboa Park", cat:"Park · 17 museums", lat:32.7341, lon:-117.1446,
+  hist:"Built for the 1915 Panama–California Exposition; the ornate Spanish fairy-tale buildings were meant to be temporary, but San Diegans refused to tear them down. Today they hold 17 museums.",
+  fact:"The Fleet Science Center here opened the world’s first IMAX dome theater.",
+  tip:"" },
+{ id:"midway", city:"sd", name:"USS Midway Museum", cat:"Aircraft carrier", lat:32.7137, lon:-117.1751,
+  hist:"An aircraft carrier that served 47 years, from just after World War II through Desert Storm — a floating city of 4,500 sailors. Now you can climb all through it.",
+  fact:"The flight deck is longer than three football fields, with about 30 real aircraft parked on top.",
+  tip:"" },
+{ id:"coronado", city:"sd", name:"Coronado Beach & Hotel del", cat:"Beach", lat:32.6810, lon:-117.1786,
+  hist:"The Hotel del Coronado opened in 1888 as the largest resort on Earth, wired for electric light with help from Thomas Edison’s company. Author L. Frank Baum wrote here — locals say “The Del” inspired Oz’s Emerald City.",
+  fact:"The sand glitters gold because it’s full of the mineral mica.",
+  tip:"" },
+{ id:"lajolla", city:"sd", name:"La Jolla Cove", cat:"Wildlife cove", lat:32.8503, lon:-117.2720,
+  hist:"A sheltered cove inside one of California’s oldest marine reserves, protected since 1929 — the sea life recovered so well that seals and sea lions now haul out beside swimmers.",
+  fact:"Snorkelers swim with bright-orange garibaldi, California’s state fish. The barking is loud and the smell is honest.",
+  tip:"" },
+{ id:"seaworld", city:"sd", name:"SeaWorld", cat:"Marine park", lat:32.7648, lon:-117.2266,
+  hist:"Opened in 1964 on Mission Bay; today it mixes rides with one of the world’s busiest marine-animal rescue operations.",
+  fact:"Its rescue team has helped more than 40,000 stranded animals.",
+  tip:"" },
+{ id:"oldtown", city:"sd", name:"Old Town San Diego", cat:"Living history", lat:32.7541, lon:-117.1973,
+  hist:"Where European California began: a Spanish fort and mission founded in 1769 grew into the little adobe town preserved here. The original buildings are now a living-history park.",
+  fact:"Costumed blacksmiths still hammer real iron, and the one-room schoolhouse runs lessons like it’s 1865.",
+  tip:"" },
+{ id:"legoland", city:"sd", name:"Legoland · Carlsbad", cat:"Theme park", lat:33.1262, lon:-117.3115,
+  hist:"Opened in 1999 — the first Legoland outside Europe — built around Miniland USA, a tiny America rebuilt brick by brick.",
+  fact:"Miniland alone uses about 32 million Lego bricks.",
+  tip:"" },
+];
+
+/* ═══════ INTERESTS (one bucket per famous landmark, for the filter) ═══════ */
+const INTEREST = {
+  ggbridge:"Icons", alcatraz:"History", pier39:"Animals", cablecar:"Rides & Parks",
+  lombard:"Icons", ggpark:"Science & Space", explor:"Science & Space", chinatown:"History",
+  palace:"Icons", ferrybldg:"Food",
+  halfmoonbay:"Beaches", santacruz:"Rides & Parks", monterey:"Animals", carmel:"Beaches",
+  bixby:"Icons", mcway:"Icons", elephantseals:"Animals", hearst:"History", moonstone:"Beaches",
+  morro:"Icons", solvang:"History", santabarbara:"Beaches", newport:"Beaches", laguna:"Beaches",
+  encinitas:"Beaches",
+  hollywood:"Icons", walkoffame:"Icons", universal:"Rides & Parks", griffith:"Science & Space",
+  labrea:"Science & Space", sciencecenter:"Science & Space", santamonica:"Rides & Parks",
+  venice:"Beaches", malibupier:"Beaches", getty:"Art & Odd", disneyland:"Rides & Parks",
+  sdzoo:"Animals", balboa:"Science & Space", midway:"History", coronado:"Beaches",
+  lajolla:"Animals", seaworld:"Animals", oldtown:"History", legoland:"Rides & Parks",
+};
+
+/* ═══════ HIDDEN GEMS — quirky, lesser-known (off by default) ═══════ */
+const HIDDEN = [
+{ id:"waveorgan", city:"sf", name:"The Wave Organ", cat:"Sound sculpture", interest:"Art & Odd", lat:37.8085, lon:-122.4401, pid:"ChIJ4e_eTCmBhYARKs37VQo82FA",
+  hist:"A wave-powered “organ” on a tiny jetty, built in 1986 from granite and marble salvaged from a demolished cemetery. Twenty-five pipes run down to the water; the tide pushes air and water through them.",
+  fact:"It plays best at high tide — gurgles, hums and sighs — with the Golden Gate Bridge right across the water.",
+  tip:"Free, and a short walk past the Palace of Fine Arts and the Marina." },
+{ id:"tiledsteps", city:"sf", name:"16th Avenue Tiled Steps", cat:"Mosaic stairway", interest:"Art & Odd", lat:37.7562, lon:-122.4732, pid:"ChIJZbB4wmGHhYAR7dZMVRkEWz0",
+  hist:"In 2005 the neighborhood covered a 163-step staircase in a flowing mosaic that runs from a sea at the bottom up to a starry sky at the top, made from 75,000 handmade tiles.",
+  fact:"Climb all 163 steps and you’re rewarded with an ocean view over the whole Sunset District.",
+  tip:"" },
+{ id:"sutrobaths", city:"sf", name:"Sutro Baths Ruins", cat:"Seaside ruins", interest:"History", lat:37.7804, lon:-122.5137, pid:"ChIJszBPbLWHhYARfrlLxEb3GuA",
+  hist:"In 1896 a millionaire built the world’s largest indoor swimming palace here — seven saltwater pools under a glass roof, holding 10,000 swimmers. It burned down in 1966, leaving a maze of concrete by the sea.",
+  fact:"You can clamber through the ruins and duck into a real sea cave at the water’s edge.",
+  tip:"Wear shoes with grip; the rocks get slippery." },
+{ id:"sewardslides", city:"sf", name:"Seward Street Slides", cat:"Concrete slides", interest:"Rides & Parks", lat:37.7578, lon:-122.4398, pid:"ChIJ2YuLxgV-j4ARBNH3ID_1sSw",
+  hist:"Two steep concrete slides built into a hillside in 1973 — the design came from a 14-year-old neighbor who won a contest to save the lot from developers.",
+  fact:"Grab a flattened cardboard box from the pile at the bottom and ride down fast. Totally free.",
+  tip:"" },
+{ id:"lastbookstore", city:"la", name:"The Last Bookstore", cat:"Bookstore wonderland", interest:"Art & Odd", lat:34.0477, lon:-118.2499, pid:"ChIJ7YJ_IkrGwoARNak4CDihkYU",
+  hist:"California’s largest used-and-new bookstore, filling an old grand bank downtown. Upstairs, artists have built arches, tunnels and a giant portal entirely out of books.",
+  fact:"You can walk through a tunnel made completely of books — the most photographed spot in LA bookworld.",
+  tip:"" },
+{ id:"jurassic", city:"la", name:"Museum of Jurassic Technology", cat:"Museum of the strange", interest:"Art & Odd", lat:34.0259, lon:-118.3951, pid:"ChIJ7fFCOiq6woARXKCVsBpvmuw",
+  hist:"A deliberately mysterious little museum in Culver City where the exhibits blur fact and fiction — micro-sculptures inside a needle’s eye, forgotten science, things you can’t quite believe.",
+  fact:"No photos allowed — the whole point is to wander, puzzle, and decide for yourself what’s real.",
+  tip:"Small and dim; great for curious older kids. Check open hours before going." },
+{ id:"angelsflight", city:"la", name:"Angels Flight", cat:"Tiny railway", interest:"History", lat:34.0516, lon:-118.2506, pid:"ChIJ_SlqhEzGwoARrIIERV62_po",
+  hist:"Billed as the world’s shortest railway: two little orange cars that have climbed a steep downtown block since 1901, balancing each other like a seesaw on rails.",
+  fact:"The whole ride lasts under a minute and costs about a dollar — right beside Grand Central Market.",
+  tip:"" },
+{ id:"wattstowers", city:"la", name:"Watts Towers", cat:"Folk-art towers", interest:"Art & Odd", lat:33.9389, lon:-118.2419, pid:"ChIJVVVVVXjJwoARavx_RXJ-v1o",
+  hist:"One man, Italian immigrant Simon Rodia, spent 33 years (1921–1954) building 17 soaring towers alone, by hand, out of steel, cement, seashells, tile and broken bottles — then gave them away and left.",
+  fact:"The tallest tower is nearly 100 feet, and he used no machines, scaffolding, bolts or welds.",
+  tip:"" },
+{ id:"sunnyjim", city:"sd", name:"Sunny Jim Sea Cave", cat:"Sea cave", interest:"Beaches", lat:32.8492, lon:-117.2702, pid:"ChIJGyDst_0D3IARtREP0jfnn0I",
+  hist:"The only sea cave in California you can reach by land — down 145 steps through a tunnel dug by hand with picks around 1903, in La Jolla.",
+  fact:"The cave mouth is shaped like a face in profile, said to have inspired the author of The Wizard of Oz.",
+  tip:"Small fee; entered through a little shop. Steps are steep and damp." },
+{ id:"sprucebridge", city:"sd", name:"Spruce Street Suspension Bridge", cat:"Wobbly footbridge", interest:"Icons", lat:32.7388, lon:-117.1658, pid:"ChIJH48HRclU2YAREp4YNJahXUM",
+  hist:"A swaying footbridge strung 70 feet above a leafy canyon in 1912, to help residents reach the streetcar across the ravine.",
+  fact:"It’s built to bounce — walk to the middle and feel it sway gently underfoot.",
+  tip:"" },
+];
+
+/* ═══════ FOOD — famous icons + current hot spots (off by default) ═══════ */
+const FOOD = [
+// San Francisco
+{ id:"tartine", city:"sf", name:"Tartine Bakery", cat:"Bakery", interest:"Food", lat:37.7614, lon:-122.4241, pid:"ChIJBVY2Bxh-j4ARa2zO8Jd6H2A",
+  hist:"The Mission bakery that made San Francisco a baking capital. People line up daily for the bread and pastries.",
+  fact:"Get the morning bun — cinnamon, sugar and orange zest in a flaky croissant-style swirl.",
+  tip:"Expect a line; near Dolores Park." },
+{ id:"swan", city:"sf", name:"Swan Oyster Depot", cat:"Seafood counter", interest:"Food", lat:37.7908, lon:-122.4210, pid:"ChIJEdGJjp6AhYAR1LtP-ptLrOg",
+  hist:"A marble seafood counter open since 1912 — just 18 stools, family-run, no tables. It was chef Anthony Bourdain’s favorite spot in the city.",
+  fact:"Crab, oysters and chowder don’t get any fresher. Cash helps; lines are long and worth it.",
+  tip:"Go early (opens 8am, closed Sundays) to beat the wait." },
+{ id:"tadich", city:"sf", name:"Tadich Grill", cat:"Historic grill", interest:"Food", lat:37.7934, lon:-122.3994, pid:"ChIJqVjXkGGAhYAR5X80yCKz9Wo",
+  hist:"California’s oldest restaurant, tracing back to an 1849 Gold Rush coffee stand. Same white tablecloths, same cioppino, for generations.",
+  fact:"They claim to have helped invent cioppino — San Francisco’s tomato-and-seafood stew.",
+  tip:"" },
+{ id:"hop", city:"sf", name:"House of Prime Rib", cat:"Prime rib", interest:"Food", lat:37.7934, lon:-122.4227, pid:"ChIJg67caeqAhYAR2UQjKb1a8j4",
+  hist:"A theatrical supper club serving one thing since 1949: prime rib, wheeled to your table in a giant silver carving cart.",
+  fact:"The salad is tossed in a spinning bowl packed in ice, right beside the table.",
+  tip:"Dinner only; reserve well ahead." },
+{ id:"birite", city:"sf", name:"Bi-Rite Creamery", cat:"Ice cream", interest:"Sweet Treats", lat:37.7616, lon:-122.4257, pid:"ChIJh1wqPBh-j4ARliLVoyr5W_c",
+  hist:"A tiny creamery by Dolores Park, famous citywide for small-batch ice cream made from scratch.",
+  fact:"Salted caramel and honey-lavender are the legends. The line moves fast.",
+  tip:"Grab cones and walk into Dolores Park." },
+{ id:"hogisland", city:"sf", name:"Hog Island Oyster Co.", cat:"Oyster bar", interest:"Food", lat:37.7960, lon:-122.3934, pid:"ChIJWTGPjmaAhYARgXpiJ-aACYM",
+  hist:"Oysters farmed up in Tomales Bay, shucked at a counter inside the Ferry Building right on the water.",
+  fact:"You can watch the bay traffic and the Bay Bridge while you slurp.",
+  tip:"" },
+{ id:"misterjiu", city:"sf", name:"Mister Jiu's", cat:"Modern Cantonese", interest:"Food", lat:37.7937, lon:-122.4067, pid:"ChIJyRDJYIuAhYARyAPkIc7A2Vo",
+  hist:"A Michelin-starred reinvention of Chinatown banquet cooking, hidden up a Chinatown alley in a former 1880s banquet hall.",
+  fact:"Famous for sourdough scallion pancakes and a glowing dining room.",
+  tip:"Dinner only; reserve." },
+{ id:"brendas", city:"sf", name:"Brenda's French Soul Food", cat:"Creole brunch", interest:"Food", lat:37.7829, lon:-122.4189, pid:"ChIJZ9s5SJeAhYARIX3Fxl6oj6c",
+  hist:"New Orleans–style Creole cooking that draws all-day brunch lines.",
+  fact:"The beignets are the star — try the savory crawfish ones.",
+  tip:"" },
+{ id:"joujou", city:"sf", name:"JouJou", cat:"French (new 2026)", interest:"Food", lat:37.7697, lon:-122.4034, pid:"ChIJO881EAB_j4ARSOzNf5RzCtc",
+  hist:"A seafood-focused French bistro that opened to buzz as one of the most exciting new restaurants of 2026.",
+  fact:"Reviewers rave about the baba au rhum dessert.",
+  tip:"New and popular — book ahead." },
+{ id:"minniebell", city:"sf", name:"Minnie Bell's Soul Movement", cat:"Soul food (new)", interest:"Food", lat:37.7822, lon:-122.4328, pid:"ChIJcYgzNSOBhYARPI-O97Gqi1g",
+  hist:"A Fillmore soul-food spot named a Best New Restaurant of 2025 by Bon Appétit.",
+  fact:"Crispy fried chicken, cornbread, and gooey mac-and-cheese balls.",
+  tip:"" },
+// Los Angeles
+{ id:"langers", city:"la", name:"Langer's Deli", cat:"Deli", interest:"Food", lat:34.0562, lon:-118.2768, pid:"ChIJP1rAZZ_HwoARAcX96y-BrjY",
+  hist:"A 1947 deli by MacArthur Park whose #19 hot-pastrami-on-rye is regularly called the best pastrami sandwich in America.",
+  fact:"They hand-cut and steam the pastrami; the rye crust stays crisp.",
+  tip:"Open daytime only; you can park and they validate." },
+{ id:"philippes", city:"la", name:"Philippe the Original", cat:"French dip", interest:"Food", lat:34.0597, lon:-118.2370, pid:"ChIJd9NcMVvGwoARpVcjtJfZBQo",
+  hist:"Open since 1908 near Union Station, Philippe’s claims to have invented the French dip sandwich — by accident, when a roll was dropped in roasting juices.",
+  fact:"Coffee still costs around 50 cents, and you sit at long communal tables with sawdust on the floor.",
+  tip:"Great cheap stop before a Dodgers game." },
+{ id:"pinks", city:"la", name:"Pink's Hot Dogs", cat:"Hot dogs", interest:"Food", lat:34.0839, lon:-118.3443, pid:"ChIJVwjfzCq_woAR4FjKokeruig",
+  hist:"A hot-dog stand since 1939 that became a Hollywood institution, its walls covered in signed celebrity photos.",
+  fact:"Dozens of over-the-top dogs are named after stars; the chili dog is the classic.",
+  tip:"There’s almost always a line, but it moves." },
+{ id:"grandcentral", city:"la", name:"Grand Central Market", cat:"Food hall", interest:"Food", lat:34.0509, lon:-118.2491, pid:"ChIJ53JDjkvGwoAR2NMG6_1OnUg",
+  hist:"A bustling public market since 1917 with dozens of stalls under one roof — tacos, egg sandwiches, noodles, oysters, ice cream.",
+  fact:"Perfect for families where everyone wants something different. Ride Angels Flight right next door.",
+  tip:"" },
+{ id:"randys", city:"la", name:"Randy's Donuts", cat:"Donuts", interest:"Sweet Treats", lat:33.9618, lon:-118.3704, pid:"ChIJG7NUYyK3woARkzkAKinOJBs",
+  hist:"The donut shop with the giant rooftop donut, built in 1953 and seen in dozens of movies, near the airport.",
+  fact:"Open 24 hours — and yes, you can pose under the world-famous big donut.",
+  tip:"" },
+{ id:"bestia", city:"la", name:"Bestia", cat:"Italian (hot ticket)", interest:"Food", lat:34.0338, lon:-118.2293, pid:"ChIJSRvZ1yHGwoARcLrfvc-APl4",
+  hist:"An Arts District Italian sensation, still one of LA’s hardest-to-book tables years after opening.",
+  fact:"Wood-fired pizzas, house-made pasta, and over-the-top desserts.",
+  tip:"Dinner; reserve early or try the chef’s counter." },
+{ id:"guelaguetza", city:"la", name:"Guelaguetza", cat:"Oaxacan", interest:"Food", lat:34.0524, lon:-118.3007, pid:"ChIJKSPWlH-4woARrKJ5thvMBeY",
+  hist:"The temple of Oaxacan cooking in LA’s Koreatown, a James Beard ‘American Classic,’ run by the same family for decades.",
+  fact:"Famous for rich, complex moles and weekend live music.",
+  tip:"" },
+{ id:"damian", city:"la", name:"Damian", cat:"Modern Mexican (new)", interest:"Food", lat:34.0334, lon:-118.2287, pid:"ChIJf5HW3w7HwoAR0EEIlkAD5vA",
+  hist:"A stylish Arts District restaurant from acclaimed Mexico City chef Enrique Olvera, making Mexican classics feel brand new.",
+  fact:"The grilled prawns and handmade tortillas get the loudest praise.",
+  tip:"" },
+// San Diego
+{ id:"hodads", city:"sd", name:"Hodad's", cat:"Burgers", interest:"Food", lat:32.7472, lon:-117.2511, pid:"ChIJaYaXFTqq3oARNy537Kb_W_c",
+  hist:"A beloved Ocean Beach burger shack, walls plastered with license plates, surf vibe throughout.",
+  fact:"The burgers are huge and the milkshakes are a meal — a kid favorite.",
+  tip:"Walking distance from the beach." },
+{ id:"luchalibre", city:"sd", name:"Lucha Libre Taco Shop", cat:"Tacos", interest:"Food", lat:32.7433, lon:-117.1816, pid:"ChIJq8oURS6r3oARdtYfAS-k538",
+  hist:"A wildly colorful taco shop themed around Mexican wrestling, featured on travel TV, with a gold ‘champions’ booth.",
+  fact:"Famous for the surf-and-turf California burrito and a big salsa bar.",
+  tip:"" },
+];
+
+/* ═══════ MERGE: one list for rendering, index and itinerary lookups ═══════ */
+const mapsURL = pid => "https://www.google.com/maps/place/?q=place_id:"+pid;
+const ALL = [
+  ...LANDMARKS.map(l => ({...l, tier:"famous", interest:INTEREST[l.id]||"Icons"})),
+  ...HIDDEN.map(l => ({...l, tier:"hidden", url:mapsURL(l.pid)})),
+  ...FOOD.map(l => ({...l, tier:"food", url:mapsURL(l.pid)})),
+];
+const byId = id => ALL.find(l => l.id===id);
+
+// Colorado River, Nevada diagonal, Oregon line. [lat, lon] pairs.
+const COAST = [
+[42.00,-124.21],[41.74,-124.17],[41.38,-124.07],[41.06,-124.14],[40.80,-124.18],
+[40.60,-124.34],[40.44,-124.41],[40.23,-124.36],[40.02,-124.07],[39.71,-123.80],
+[39.30,-123.80],[38.91,-123.71],[38.77,-123.53],[38.45,-123.13],[38.31,-123.05],
+[38.23,-122.99],[37.995,-123.02],[37.90,-122.69],[37.86,-122.58],[37.827,-122.53],
+[37.832,-122.483],
+// — into San Francisco Bay (north & east shore) —
+[37.87,-122.44],[37.96,-122.43],[38.07,-122.40],[38.06,-122.26],[38.03,-122.20],
+[37.96,-122.30],[37.87,-122.31],[37.80,-122.30],[37.74,-122.23],[37.63,-122.12],
+[37.50,-122.05],[37.455,-122.03],
+// — back up the west shore to the city —
+[37.47,-122.10],[37.55,-122.20],[37.59,-122.29],[37.62,-122.37],[37.70,-122.385],
+[37.74,-122.38],[37.79,-122.385],[37.81,-122.405],[37.808,-122.43],[37.81,-122.465],
+[37.806,-122.477],
+// — out the Golden Gate, down the open coast —
+[37.79,-122.51],[37.70,-122.50],[37.59,-122.515],[37.46,-122.44],[37.25,-122.42],
+[37.11,-122.34],[36.95,-122.05],[36.96,-121.95],[36.80,-121.79],[36.70,-121.81],
+[36.61,-121.89],[36.62,-121.96],[36.52,-121.94],[36.45,-121.92],[36.37,-121.90],
+[36.23,-121.78],[36.01,-121.53],[35.85,-121.40],[35.665,-121.285],[35.64,-121.19],
+[35.55,-121.10],[35.45,-120.93],[35.37,-120.865],[35.27,-120.89],[35.18,-120.73],
+[35.13,-120.64],[34.96,-120.65],[34.90,-120.67],[34.58,-120.65],[34.45,-120.47],
+[34.47,-120.22],[34.41,-119.88],[34.40,-119.69],[34.39,-119.52],[34.27,-119.30],
+[34.14,-119.20],[34.08,-119.05],[33.99,-118.81],[34.03,-118.69],[34.02,-118.58],
+[34.005,-118.50],[33.96,-118.455],[33.875,-118.41],[33.835,-118.395],[33.74,-118.41],
+[33.705,-118.29],[33.715,-118.27],[33.755,-118.16],[33.73,-118.10],[33.655,-118.00],
+[33.59,-117.87],[33.54,-117.78],[33.46,-117.70],[33.41,-117.61],[33.37,-117.56],
+[33.19,-117.385],[33.13,-117.34],[33.04,-117.30],[32.96,-117.27],[32.92,-117.26],
+[32.85,-117.28],[32.79,-117.255],[32.755,-117.255],[32.74,-117.255],[32.665,-117.24],
+// — into San Diego Bay —
+[32.70,-117.22],[32.72,-117.19],[32.70,-117.16],[32.65,-117.14],[32.62,-117.12],
+[32.59,-117.105],[32.57,-117.12],[32.56,-117.13],[32.534,-117.124],
+// — Mexico border east, Colorado River north, Nevada diagonal, Oregon —
+[32.67,-115.50],[32.72,-114.72],[32.84,-114.47],[33.03,-114.51],[33.30,-114.68],
+[33.55,-114.53],[33.95,-114.43],[34.21,-114.16],[34.30,-114.14],[34.45,-114.38],
+[34.71,-114.49],[34.86,-114.60],[35.00,-114.63],[36.00,-115.97],[37.00,-117.31],
+[38.00,-118.66],[39.00,-120.00],[42.00,-120.00],
+];
+
+const ISLANDS = [ // [name, lat, lon, rx(°lon), ry(°lat), rotation°]
+  ["Catalina",       33.385,-118.42, .19, .045, -32],
+  ["Angel I.",       37.861,-122.430,.022,.016, 0],
+  ["Alcatraz",       37.827,-122.423,.009,.006, 0],
+  ["Treasure I.",    37.823,-122.371,.010,.011, 0],
+  ["Coronado",       32.682,-117.176,.020,.014, -20],
+];
+
+const PARKS = [ // simple [lat,lon] polygons
+  [[37.7745,-122.511],[37.7745,-122.454],[37.766,-122.454],[37.766,-122.511]],                    // Golden Gate Park
+  [[37.806,-122.478],[37.802,-122.446],[37.788,-122.452],[37.790,-122.477]],                      // Presidio
+  [[34.16,-118.316],[34.15,-118.275],[34.118,-118.272],[34.105,-118.300],[34.13,-118.322]],       // Griffith Park
+  [[32.745,-117.156],[32.745,-117.140],[32.720,-117.140],[32.720,-117.156]],                      // Balboa Park
+];
+
+// Route 1 spine, SF → SD, through the stops in driving order.
+const ROUTE = [
+[37.79,-122.42],[37.62,-122.42],[37.4636,-122.4286],[37.10,-122.33],[36.9643,-122.0173],[36.80,-121.79],
+[36.6182,-121.9018],[36.45,-121.91],[36.3715,-121.9016],[36.1578,-121.6722],[36.05,-121.57],[35.80,-121.37],
+[35.6628,-121.2570],[35.6852,-121.1681],[35.55,-121.05],[35.3695,-120.8499],[35.13,-120.64],
+[34.90,-120.55],[34.65,-120.30],[34.5958,-120.1376],[34.50,-119.90],[34.4100,-119.6860],
+[34.27,-119.29],[34.10,-118.90],[34.02,-118.55],[34.05,-118.25],[33.8121,-117.9190],
+[33.6061,-117.8983],[33.5427,-117.7854],[33.46,-117.70],[33.19,-117.385],[33.1262,-117.3115],[33.0370,-117.2920],[32.96,-117.27],
+[32.8503,-117.2720],[32.72,-117.16],
+];
+
+const GEO_LABELS = [ // text, lat, lon, size, rotation, extraClass
+  ["PACIFIC OCEAN", 36.1, -123.6, 26, -52, ""],
+  ["SIERRA NEVADA", 37.6, -119.4, 15, 55, ""],
+  ["MOJAVE DESERT", 35.0, -116.4, 13, 0, ""],
+  ["NEVADA",        38.6, -117.6, 14, 0, "state-label"],
+  ["MEXICO",        32.25,-116.2, 13, 0, "state-label"],
+  ["OREGON",        42.25,-122.2, 12, 0, "state-label"],
+];
+
+/* ═══════ PROJECTION & SVG HELPERS ═══════ */
+const COSLAT = Math.cos(37*Math.PI/180);
+const SX = 100*COSLAT, SY = 100;
+const px = lon => (lon+125)*SX;
+const py = lat => (42.6-lat)*SY;
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+const pathFrom = pts => pts.map((p,i)=>(i?"L":"M")+px(p[1]).toFixed(1)+" "+py(p[0]).toFixed(1)).join("");
+
+/* ═══════ BUILD THE BASE MAP ═══════ */
+const svg = document.getElementById("map");
+const $ = id => document.getElementById(id);
+
+// land + islands
+el("path", {d: pathFrom(COAST)+"Z", id:"landPath", class:"land"}, $("gLand"));
+for (const [,lat,lon,rx,ry,rot] of ISLANDS){
+  el("ellipse", {cx:px(lon), cy:py(lat), rx:rx*SX, ry:ry*SY,
+    transform:`rotate(${rot} ${px(lon)} ${py(lat)})`, class:"island"}, $("gLand"));
+}
+// state borders accent (NV diagonal + Oregon line, dashed)
+el("path", {d: pathFrom([[35.00,-114.63],[39.00,-120.00],[42.00,-120.00]]), class:"border-line"}, $("gLand"));
+
+// parks — clipped to the land so they can't bleed into the painted sea
+const landClip = el("clipPath", {id:"landClip"}, svg);
+el("use", {href:"#landPath", "xlink:href":"#landPath"}, landClip);
+$("gParks").setAttribute("clip-path", "url(#landClip)");
+for (const poly of PARKS) el("path", {d: pathFrom(poly)+"Z", class:"park"}, $("gParks"));
+
+// graticule (1°)
+for (let lon=-125; lon<=-114; lon++)
+  el("line",{x1:px(lon),y1:py(43),x2:px(lon),y2:py(32),class:"grat"},$("gGrat"));
+for (let lat=32; lat<=43; lat++)
+  el("line",{x1:px(-126),y1:py(lat),x2:px(-113),y2:py(lat),class:"grat"},$("gGrat"));
+
+// terrain hachures (tiny carets along the ranges) — built once, toggleable
+(function ridges(){
+  const g = $("gRidges");
+  function range(a, b, n, jitter, size){
+    for (let i=0;i<n;i++){
+      const t=i/(n-1), lat=a[0]+(b[0]-a[0])*t + (Math.sin(i*7.3)*jitter);
+      const lon=a[1]+(b[1]-a[1])*t + (Math.cos(i*5.1)*jitter*1.6);
+      const x=px(lon), y=py(lat), s=size*(0.75+((i*37)%10)/20);
+      el("path",{d:`M${x-s} ${y+s*.7} L${x} ${y-s*.7} L${x+s} ${y+s*.7}`,class:"ridge"},g);
+    }
+  }
+  range([39.4,-120.7],[35.7,-118.35], 26, .14, 5.5);   // Sierra Nevada
+  range([39.0,-121.1],[36.1,-118.9],  18, .12, 4);     // Sierra second row
+  range([40.6,-123.3],[36.6,-121.5],  16, .15, 3.4);   // Coast Ranges
+  range([34.36,-118.2],[34.18,-116.9],10, .06, 3.6);   // San Gabriels
+})();
+
+// geographic labels
+for (const [t,lat,lon,size,rot,cls] of GEO_LABELS){
+  const x=px(lon), y=py(lat);
+  const n = el("text",{x,y,"font-size":size,class:"geo-label "+cls,
+    transform:`rotate(${rot} ${x} ${y})`},$("gGeoLabels"));
+  n.textContent=t;
+}
+
+// route
+el("path",{d:pathFrom(ROUTE), id:"routePath"},$("gRoute"));
+
+/* ═══════ ROADS — highways at mid zoom, city streets one step deeper ═══════ */
+const markerEls = {};   // everything that stays screen-sized lives here
+const HIGHWAYS = [
+["I-5",[[42.0,-122.60],[41.31,-122.31],[40.58,-122.37],[39.74,-122.20],[38.68,-121.62],[38.16,-121.42],[37.64,-121.22],[36.60,-120.70],[35.90,-119.85],[35.00,-118.94],[34.32,-118.49],[34.06,-118.22],[33.83,-117.91],[33.40,-117.59],[33.20,-117.38],[32.95,-117.25],[32.72,-117.16],[32.55,-117.04]]],
+["I-80",[[37.81,-122.36],[37.87,-122.30],[38.12,-122.25],[38.58,-121.49],[39.17,-120.85],[39.33,-120.17],[39.45,-120.00]]],
+["US-101",[[34.05,-118.24],[34.16,-118.47],[34.17,-118.83],[34.27,-119.27],[34.45,-119.80],[34.61,-120.19],[34.95,-120.42],[35.28,-120.66],[35.63,-120.69],[36.20,-121.13],[36.68,-121.66],[36.97,-121.55],[37.36,-121.92],[37.60,-122.39],[37.78,-122.41]]],
+["US-101",[[37.80,-122.45],[37.93,-122.53],[38.23,-122.62],[38.44,-122.71],[39.15,-123.20],[39.80,-123.25],[40.60,-124.10],[40.87,-124.08],[41.75,-124.19]]],
+["I-10",[[34.03,-118.49],[34.05,-118.24],[34.07,-117.70],[33.92,-117.23],[33.82,-116.55],[33.72,-116.20],[33.61,-114.60]]],
+["I-15",[[32.76,-117.11],[33.13,-117.10],[33.50,-117.15],[33.88,-117.55],[34.11,-117.39],[34.30,-117.45],[34.88,-117.02],[35.27,-116.07],[35.62,-115.39]]],
+["I-8",[[32.75,-117.20],[32.78,-116.80],[32.73,-116.10],[32.79,-115.56],[32.73,-114.73]]],
+["CA-99",[[38.58,-121.49],[37.95,-121.29],[37.30,-120.48],[36.74,-119.78],[36.21,-119.34],[35.37,-119.02],[35.00,-118.95]]],
+];
+// city streets removed — highways only
+function buildRoads(list, group, cls, lblCls){
+  list.forEach(([name,pts],idx)=>{
+    el("path",{d:pathFrom(pts),class:cls},group);
+    // label at the middle segment, rotated along it, kept screen-size
+    const i=Math.floor((pts.length-1)/2);
+    const [a,b]=[pts[i],pts[i+1]||pts[i-1]];
+    const x=(px(a[1])+px(b[1]))/2, y=(py(a[0])+py(b[0]))/2;
+    let deg=Math.atan2(py(b[0])-py(a[0]), px(b[1])-px(a[1]))*180/Math.PI;
+    if (deg>90) deg-=180; if (deg<-90) deg+=180;
+    const g=el("g",{class:"roadlbl "+lblCls},group);
+    const t=el("text",{x:0,y:-3},g); t.textContent=name;
+    g.dataset.x=x; g.dataset.y=y; g.dataset.r=deg.toFixed(1);
+    markerEls["rd_"+lblCls+idx]=g;
+  });
+}
+buildRoads(HIGHWAYS,$("gHighways"),"hwy","hw");
+
+// city plaques (state-level labels, tap to fly)
+for (const key of ["sf","la","sd"]){
+  const c=CITIES[key], x=px(c.plaque[1]), y=py(c.plaque[0]);
+  const g=el("g",{class:"plaque","data-city":key},$("gPlaques"));
+  const t=el("text",{x:0,y:0,"font-size":17},g); t.textContent=c.name;
+  const s=el("text",{x:0,y:11,class:"pl-sub"},g); s.textContent="TAP TO EXPLORE";
+  el("line",{x1:-46,y1:3,x2:46,y2:3},g);
+  g.dataset.x=x; g.dataset.y=y;
+  g.addEventListener("click",e=>{e.stopPropagation(); flyToCity(key);});
+}
+
+// landmark / food / hidden markers
+for (const lm of ALL){
+  const x=px(lm.lon), y=py(lm.lat);
+  const parent = lm.city==="coast" ? $("gCoastStops") : $("gLandmarks");
+  const g=el("g",{class:"marker kind-"+lm.city+" t-"+lm.tier,"data-id":lm.id},parent);
+  g.dataset.tier=lm.tier; g.dataset.interest=lm.interest;
+  el("circle",{class:"hit",cx:0,cy:-2,r:16,fill:"transparent"},g);
+  el("circle",{class:"halo",cx:0,cy:0,r:7,fill:"none",stroke:"var(--ink)","stroke-width":.7,opacity:.45},g);
+  if (lm.tier==="food")
+    el("rect",{class:"dot",x:-3,y:-3,width:6,height:6,transform:"rotate(45)"},g);  // diamond
+  else
+    el("circle",{class:"dot",cx:0,cy:0,r:3.6},g);
+  const t=el("text",{x:0,y:15},g); t.textContent=lm.name;
+  g.dataset.x=x; g.dataset.y=y;
+  g.addEventListener("click",e=>{e.stopPropagation(); openCard(lm.id);});
+  markerEls[lm.id]=g;
+}
+
+/* ═══════ VIEWPORT: pan, pinch, wheel, fly ═══════ */
+const WORLD = {x:px(-125.6), y:py(42.6), w:(px(-113.6)-px(-125.6)), h:(py(31.9)-py(42.6))};
+let vb = {...WORLD};
+let raf=0;
+
+function fitBounds(b, pad=1.12){ // b: [[latMin,lonMin],[latMax,lonMax]]
+  const x1=px(b[0][1]), x2=px(b[1][1]), y1=py(b[1][0]), y2=py(b[0][0]);
+  const cw=svg.clientWidth||1, ch=svg.clientHeight||1;
+  let w=(x2-x1)*pad, h=(y2-y1)*pad;
+  if (w/h < cw/ch) w=h*cw/ch; else h=w*ch/cw;
+  return {x:(x1+x2)/2-w/2, y:(y1+y2)/2-h/2, w, h};
+}
+function setVB(n){ vb=n; if(!raf) raf=requestAnimationFrame(applyVB); }
+function applyVB(){
+  raf=0;
+  svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const cw=svg.clientWidth||1, ch=svg.clientHeight||1;
+  const scale=Math.max(vb.w/cw, vb.h/ch);           // world units per screen px
+  // counter-scale markers & plaques so they stay readable at any zoom
+  const ms=scale, ps=scale;
+  for (const id in markerEls){
+    const g=markerEls[id];
+    const rot=g.dataset.r ? ` rotate(${g.dataset.r})` : "";
+    g.setAttribute("transform",`translate(${g.dataset.x} ${g.dataset.y}) scale(${ms})`+rot);
+  }
+  document.querySelectorAll(".plaque").forEach(g=>{
+    g.setAttribute("transform",`translate(${g.dataset.x} ${g.dataset.y}) scale(${ps})`);
+  });
+  // level of detail
+  svg.classList.toggle("z-city", vb.w<180);
+  svg.classList.toggle("z-state", vb.w>=180);
+  svg.classList.toggle("z-far", vb.w>420);
+  // status bar
+  $("stScale").textContent=Math.round((vb.w/SX)*55.3).toLocaleString();
+}
+function clientToWorld(cx,cy){
+  const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy;
+  const m=svg.getScreenCTM(); if(!m) return {x:0,y:0};
+  const p=pt.matrixTransform(m.inverse());
+  return {x:p.x,y:p.y};
+}
+function zoomAbout(wx,wy,f){
+  const w=Math.min(Math.max(vb.w*f, 4), WORLD.w*1.6);
+  const k=w/vb.w;
+  setVB({x:wx-(wx-vb.x)*k, y:wy-(wy-vb.y)*k, w, h:vb.h*k});
+}
+
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let flyId=0;
+function flyTo(target){
+  if (REDUCED){ setVB(target); return; }
+  const from={...vb}, id=++flyId, t0=performance.now(), D=850;
+  (function step(now){
+    if (id!==flyId) return;
+    const t=Math.min(1,(now-t0)/D), e=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    setVB({x:from.x+(target.x-from.x)*e, y:from.y+(target.y-from.y)*e,
+           w:from.w+(target.w-from.w)*e, h:from.h+(target.h-from.h)*e});
+    if (t<1) requestAnimationFrame(step);
+  })(t0);
+}
+function flyToCity(key){ flyTo(fitBounds(CITIES[key].bounds)); }
+function flyToLandmark(id){
+  const lm=byId(id); if(!lm) return;
+  const w = lm.city==="coast" ? 110 : 16;
+  const cw=svg.clientWidth||1, ch=svg.clientHeight||1, h=w*ch/cw;
+  flyTo({x:px(lm.lon)-w/2, y:py(lm.lat)-h/2, w, h});
+}
+
+// pointer pan & pinch
+const pointers=new Map();
+let downPt=null, dragged=false;
+svg.addEventListener("pointerdown",e=>{
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===1){ downPt={x:e.clientX,y:e.clientY}; dragged=false; }
+  svg.classList.add("dragging");
+});
+svg.addEventListener("pointermove",e=>{
+  if(!pointers.has(e.pointerId)){
+    const w=clientToWorld(e.clientX,e.clientY);
+    $("stCoords").textContent=(42.6-w.y/SY).toFixed(3)+"° N · "+Math.abs(w.x/SX-125).toFixed(3)+"° W";
+    return;
+  }
+  const prev={...pointers.get(e.pointerId)};
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(downPt && Math.hypot(e.clientX-downPt.x,e.clientY-downPt.y)>6) dragged=true;
+  if (pointers.size===1){
+    const a=clientToWorld(prev.x,prev.y), b=clientToWorld(e.clientX,e.clientY);
+    setVB({...vb, x:vb.x-(b.x-a.x), y:vb.y-(b.y-a.y)});
+  } else if (pointers.size===2){
+    dragged=true;
+    const [p1,p2]=[...pointers.values()];
+    const cur={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+    const dCur=Math.hypot(p1.x-p2.x,p1.y-p2.y)||1;
+    const other=[...pointers.entries()].find(([id])=>id!==e.pointerId)[1];
+    const dPrev=Math.hypot(prev.x-other.x,prev.y-other.y)||1;
+    const mid=clientToWorld(cur.x,cur.y);
+    zoomAbout(mid.x, mid.y, dPrev/dCur);
+  }
+});
+function endPointer(e){ pointers.delete(e.pointerId); if(!pointers.size) svg.classList.remove("dragging"); }
+svg.addEventListener("pointerup",endPointer);
+svg.addEventListener("pointercancel",endPointer);
+// after a real drag, swallow the click so it doesn't accidentally open a card;
+// a clean tap (dragged===false) passes through to the marker/plaque handlers
+svg.addEventListener("click",e=>{
+  if(dragged){ e.stopPropagation(); e.preventDefault(); return; }
+  if(measuring){ e.stopPropagation(); e.preventDefault(); addMeasurePoint(e.clientX,e.clientY); }
+}, true);
+svg.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const w=clientToWorld(e.clientX,e.clientY);
+  zoomAbout(w.x,w.y,Math.exp(e.deltaY*0.0012));
+},{passive:false});
+// belt-and-suspenders vs. pull-to-refresh: never let a touch on the map scroll the page
+svg.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});
+svg.addEventListener("dblclick",e=>{
+  const w=clientToWorld(e.clientX,e.clientY); zoomAbout(w.x,w.y,0.5);
+});
+
+// controls
+$("zoomIn").onclick = ()=>zoomAbout(vb.x+vb.w/2, vb.y+vb.h/2, 0.6);
+$("zoomOut").onclick = ()=>zoomAbout(vb.x+vb.w/2, vb.y+vb.h/2, 1/0.6);
+$("zoomHome").onclick = ()=>flyTo(fitBounds([[32.3,-124.6],[42.2,-113.9]],1.0));
+document.querySelectorAll("[data-fly]").forEach(b=>b.onclick=()=>flyToCity(b.dataset.fly));
+
+/* ═══════ GPS: “YOU ARE HERE” (only inside California) ═══════ */
+let toastTimer=0;
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),4200);
+}
+// ray-cast against the actual state outline
+function inCalifornia(lat,lon){
+  let inside=false;
+  for (let i=0,j=COAST.length-1;i<COAST.length;j=i++){
+    const yi=COAST[i][0],xi=COAST[i][1],yj=COAST[j][0],xj=COAST[j][1];
+    if (((yi>lat)!==(yj>lat)) && (lon < (xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+let watchId=null, youEl=null, youAcc=null, youFlown=false, youVisible=false, youLatLon=null;
+function ensureYouMarker(){
+  if (youEl){ markerEls.__you=youEl; return; }
+  youAcc=el("circle",{id:"youAcc",cx:0,cy:0,r:0},$("gYou"));
+  youEl=el("g",{id:"youMarker"},$("gYou"));
+  el("circle",{class:"pulse",cx:0,cy:0,r:5},youEl);
+  el("circle",{class:"core",cx:0,cy:0,r:4},youEl);
+  const t=el("text",{x:0,y:-11},youEl); t.textContent="YOU ARE HERE";
+  markerEls.__you=youEl;            // joins the counter-scaling pass
+}
+function hideYou(){ if(youEl){youEl.style.display="none"; youAcc.style.display="none";} youVisible=false; }
+
+function onFix(pos){
+  const {latitude:lat, longitude:lon, accuracy:acc}=pos.coords;
+  youLatLon={lat,lon};
+  if (!inCalifornia(lat,lon)){
+    if (youVisible) hideYou();
+    if (!youFlown) toast("You’re outside the chart — the marker appears once you reach California.");
+    youFlown=true;                  // only nag once
+    return;
+  }
+  ensureYouMarker();
+  const x=px(lon), y=py(lat);
+  youEl.style.display=""; youEl.dataset.x=x; youEl.dataset.y=y;
+  // accuracy halo in world units (1° lat ≈ 111.3 km); skip if hopeless
+  if (acc && acc<5000){
+    youAcc.style.display="";
+    youAcc.setAttribute("cx",x); youAcc.setAttribute("cy",y);
+    youAcc.setAttribute("r",(acc/111320)*SY);
+  } else youAcc.style.display="none";
+  youVisible=true;
+  setVB({...vb});                   // refresh counter-scaling
+  if (!youFlown){
+    youFlown=true;
+    const w=40, cw=svg.clientWidth||1, ch=svg.clientHeight||1, h=w*ch/cw;
+    flyTo({x:x-w/2, y:y-h/2, w, h});
+  }
+}
+function onFixError(err){
+  stopLoc();
+  toast(err.code===1 ? "Location permission was denied — enable it in your browser settings."
+                     : "Couldn’t get a GPS fix. Try again with a clearer view of the sky.");
+}
+function startLoc(){
+  if (!navigator.geolocation){ toast("This browser doesn’t offer geolocation."); return; }
+  youFlown=false;
+  watchId=navigator.geolocation.watchPosition(onFix,onFixError,
+    {enableHighAccuracy:false, maximumAge:10000, timeout:20000});
+  $("locBtn").classList.add("live");
+}
+function stopLoc(){
+  if (watchId!==null) navigator.geolocation.clearWatch(watchId);
+  watchId=null; hideYou(); delete markerEls.__you;
+  $("locBtn").classList.remove("live");
+}
+$("locBtn").onclick=()=>{ watchId===null ? startLoc() : stopLoc(); };
+
+/* ═══════ LAYER TOGGLES (performance) ═══════ */
+function bindLayer(chk, node){ $(chk).addEventListener("change",e=>{ $(node).style.display=e.target.checked?"":"none"; }); }
+bindLayer("lyTerrain","gRidges");
+bindLayer("lyRoads","gRoads");
+bindLayer("lyRoute","gRoute");
+bindLayer("lyGeo","gGeoLabels");
+$("gRoads").style.display="none";                      // roads off by default
+$("gGrat").style.display="none";                       // grid off by default
+$("lyGrid").addEventListener("change",e=>{ $("gGrat").style.display=e.target.checked?"":"none"; });
+
+/* ═══════ STAMPS, CARD ═══════ */
+// Wikipedia article titles where the landmark name alone is ambiguous
+const WIKI = {
+  cablecar:"San Francisco cable car system", lombard:"Lombard Street (San Francisco)",
+  ggpark:"Golden Gate Park", chinatown:"Chinatown, San Francisco",
+  ferrybldg:"San Francisco Ferry Building", palace:"Palace of Fine Arts",
+  halfmoonbay:"Half Moon Bay, California", carmel:"Carmel-by-the-Sea",
+  bixby:"Bixby Creek Bridge", elephantseals:"Piedras Blancas rookery",
+  moonstone:"Moonstone Beach", santabarbara:"Stearns Wharf",
+  newport:"Balboa Island, Newport Beach", laguna:"Laguna Beach, California",
+  encinitas:"Encinitas, California", venice:"Venice, Los Angeles",
+  universal:"Universal Studios Hollywood", sciencecenter:"California Science Center",
+  balboa:"Balboa Park (San Diego)", midway:"USS Midway Museum",
+  coronado:"Hotel del Coronado", lajolla:"La Jolla Cove",
+  seaworld:"SeaWorld San Diego", oldtown:"Old Town San Diego State Historic Park",
+  legoland:"Legoland California", solvang:"Solvang, California",
+  morro:"Morro Rock", malibupier:"Malibu Pier",
+};
+function wikiURL(lm){
+  const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
+  return "https://en.wikipedia.org/wiki/Special:Search?go=Go&search="+encodeURIComponent(q);
+}
+let cardId=null;
+function openCard(id){
+  const lm=byId(id); if(!lm) return;
+  cardId=id;
+  const tierLabel = lm.tier==="food" ? "Food" : lm.tier==="hidden" ? "Hidden gem" : "";
+  $("cEyebrow").textContent=CITIES[lm.city].name+" · "+lm.cat+(tierLabel?" · "+tierLabel:"");
+  $("cName").textContent=lm.name;
+  $("cHist").textContent=lm.hist;
+  $("cFact").textContent=lm.fact;
+  $("cTip").textContent=lm.tip; $("cTip").style.display=lm.tip?"":"none";
+  if (lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Open in Maps ↗"; }
+  else { $("cWiki").href=wikiURL(lm); $("cWiki").textContent="Wikipedia ↗"; }
+  $("card").classList.add("open");
+}
+$("cardClose").onclick=()=>$("card").classList.remove("open");
+
+/* ═══════ DOCK: tabs, search index, plan ═══════ */
+const dock=$("dock");
+$("dockBtn").onclick=()=>{ switchTab("index"); dock.classList.toggle("open"); };
+$("planBtn").onclick=()=>{ switchTab("plan"); dock.classList.add("open"); };
+$("dockClose").onclick=()=>dock.classList.remove("open");
+function switchTab(t){
+  $("tabIndex").classList.toggle("active",t==="index");
+  $("tabPlan").classList.toggle("active",t==="plan");
+  $("paneIndex").style.display=t==="index"?"":"none";
+  $("panePlan").style.display=t==="plan"?"":"none";
+}
+$("tabIndex").onclick=()=>switchTab("index");
+$("tabPlan").onclick=()=>switchTab("plan");
+
+const GROUP_ORDER=["sf","coast","la","sd"];
+const INTERESTS=["All","Icons","Animals","Rides & Parks","Beaches","Science & Space","History","Art & Odd","Food","Sweet Treats"];
+const tiers={famous:true, hidden:false, food:false};
+let interest="All";
+
+function tierGlyph(t){ return "<span class='key "+t+"'></span>"; }
+function passesFilter(lm){ return tiers[lm.tier] && (interest==="All" || lm.interest===interest); }
+
+function applyFilters(){
+  for (const lm of ALL){
+    const g=markerEls[lm.id]; if(!g) continue;
+    g.style.display = passesFilter(lm) ? "" : "none";
+  }
+  renderIndex($("search").value);
+}
+
+// tier checkboxes
+[["tierFamous","famous"],["tierHidden","hidden"],["tierFood","food"]].forEach(([id,t])=>{
+  $(id).addEventListener("change",e=>{ tiers[t]=e.target.checked; applyFilters(); });
+});
+
+// interest chips
+(function buildChips(){
+  const box=$("interestChips");
+  INTERESTS.forEach(name=>{
+    const c=document.createElement("button");
+    c.className="ichip"+(name==="All"?" on":""); c.textContent=name;
+    c.onclick=()=>{
+      interest=name;
+      [...box.children].forEach(ch=>ch.classList.toggle("on", ch.textContent===name));
+      applyFilters();
+    };
+    box.appendChild(c);
+  });
+})();
+
+function ensureTierOn(t){
+  if (tiers[t]) return;
+  tiers[t]=true;
+  const id = t==="famous"?"tierFamous":t==="hidden"?"tierHidden":"tierFood";
+  $(id).checked=true;
+}
+
+function renderIndex(q){
+  q=(q||"").trim().toLowerCase();
+  const list=$("idxList"); list.innerHTML="";
+  let any=false;
+  for (const key of GROUP_ORDER){
+    const items=ALL.filter(l=>{
+      if (l.city!==key) return false;
+      if (q) return (l.name+" "+l.cat+" "+l.interest).toLowerCase().includes(q); // search ignores tier/interest
+      return passesFilter(l);
+    });
+    if(!items.length) continue;
+    any=true;
+    const grp=document.createElement("div"); grp.className="grp";
+    grp.innerHTML="<h4>"+CITIES[key].name+"</h4>";
+    for (const lm of items){
+      const b=document.createElement("button"); b.className="idx-item";
+      b.innerHTML=tierGlyph(lm.tier)+
+        "<span class='nm'> "+lm.name+"</span><span class='ct'>"+lm.cat+"</span>";
+      b.onclick=()=>{
+        ensureTierOn(lm.tier);                 // make sure its marker is visible
+        applyFilters();
+        flyToLandmark(lm.id); openCard(lm.id);
+        if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
+      };
+      grp.appendChild(b);
+    }
+    list.appendChild(grp);
+  }
+  if(!any) list.innerHTML="<p class='nores'>Nothing by that name here. Try “zoo,” “beach,” “tacos,” or turn on more layers above.</p>";
+}
+$("search").addEventListener("input",e=>renderIndex(e.target.value));
+
+function renderPlan(){
+  const list=$("planList"); list.innerHTML="";
+  const days=[...ITINERARY].sort((a,b)=>a.day-b.day);
+  if(!days.length){
+    list.innerHTML="<p class='plan-note'>No days planned yet. Tap “Add to plan” on any landmark, or fill in the ITINERARY list at the top of the file.</p>";
+    return;
+  }
+  days.forEach((d,i)=>{
+    const row=document.createElement("div"); row.className="day"+(d.sample?" sample":"");
+    const lm=d.landmark?byId(d.landmark):null;
+    row.innerHTML="<span class='badge'>"+(d.date||("Day "+d.day))+"</span>"+
+      "<button class='ttl'>"+d.title+"</button>"+
+      "<button class='rm' aria-label='Remove'>×</button>";
+    row.querySelector(".ttl").onclick=()=>{
+      if (lm){ flyToLandmark(lm.id); openCard(lm.id); }
+      else if (d.bounds){ flyTo(fitBounds(d.bounds)); $("card").classList.remove("open"); }
+      else if (d.city && CITIES[d.city].bounds){ flyToCity(d.city); $("card").classList.remove("open"); }
+      if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
+    };
+    row.querySelector(".rm").onclick=()=>{ ITINERARY.splice(ITINERARY.indexOf(d),1); renderPlan(); };
+    list.appendChild(row);
+  });
+}
+
+/* ═══════ MEASURE: bird's-eye distance + approximate drive time ═══════ */
+let measuring=false, mPts=[], mLine=null;
+const mGroup=$("gMeasure");
+function milesBetween(a,b){                       // great-circle miles
+  const R=3958.8, toR=Math.PI/180;
+  const dLat=(b.lat-a.lat)*toR, dLon=(b.lon-a.lon)*toR;
+  const h=Math.sin(dLat/2)**2 + Math.cos(a.lat*toR)*Math.cos(b.lat*toR)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function fmtTime(mins){
+  mins=Math.max(1,Math.round(mins));
+  if(mins<60) return mins+" min";
+  const h=Math.floor(mins/60), m=mins%60;
+  return h+" h"+(m?" "+m+" m":"");
+}
+function dropPin(p,idx){
+  const g=el("g",{class:"mpin"},mGroup);
+  el("circle",{class:"mpin-core",cx:0,cy:0,r:4},g);
+  const t=el("text",{x:0,y:-9},g); t.textContent= idx===0?"A":"B";
+  g.dataset.x=px(p.lon); g.dataset.y=py(p.lat);
+  markerEls["m"+idx]=g;
+}
+function clearMeasure(){
+  mPts=[];
+  if(mLine){ mLine.remove(); mLine=null; }
+  ["m0","m1"].forEach(k=>{ if(markerEls[k]){ markerEls[k].remove(); delete markerEls[k]; } });
+  $("measOut").classList.remove("show");
+}
+function exitMeasure(){ measuring=false; $("measBtn").classList.remove("live"); clearMeasure(); }
+function computeMeasure(){
+  const [a,b]=mPts;
+  if(mLine) mLine.remove();
+  mLine=el("path",{d:`M${px(a.lon)} ${py(a.lat)} L${px(b.lon)} ${py(b.lat)}`,class:"mline"},mGroup);
+  mGroup.insertBefore(mLine, mGroup.firstChild);   // line beneath the pins
+  const crow=milesBetween(a,b), road=crow*1.3, mins=road/50*60;   // ~×1.3 winding, ~50 mph
+  $("measMain").textContent="~ "+fmtTime(mins)+" by car";
+  $("measSub").textContent="≈ "+Math.round(road)+" mi by road · "+Math.round(crow)+" mi as the crow flies";
+  $("measOut").classList.add("show");
+}
+function addMeasurePoint(cx,cy){
+  if(mPts.length>=2) clearMeasure();               // a third tap starts a fresh measurement
+  const w=clientToWorld(cx,cy);
+  const p={lon:w.x/SX-125, lat:42.6-w.y/SY};
+  dropPin(p,mPts.length); mPts.push(p);
+  setVB({...vb});                                  // counter-scale the new pin
+  if(mPts.length===2) computeMeasure();
+  else toast("Point A set — now tap your destination.");
+}
+$("measBtn").onclick=()=>{
+  if(measuring){ exitMeasure(); return; }
+  measuring=true; $("measBtn").classList.add("live"); clearMeasure();
+  if(youVisible && youLatLon){                     // seed from the live GPS fix
+    dropPin(youLatLon,0); mPts.push({...youLatLon}); setVB({...vb});
+    toast("Measuring from your location — tap your destination.");
+  } else {
+    toast("Measure mode — tap point A, then point B.");
+  }
+};
+$("measClear").onclick=exitMeasure;
+
+/* ═══════ INIT ═══════ */
+$("lmCount").textContent=LANDMARKS.length;
+$("foodCount").textContent=FOOD.length;
+$("hiddenCount").textContent=HIDDEN.length;
+applyFilters();
+renderPlan();
+setVB(fitBounds([[32.3,-124.6],[42.2,-113.9]],1.0));
+addEventListener("resize",()=>setVB({...vb}));
+</script>
+</body>
+</html>
