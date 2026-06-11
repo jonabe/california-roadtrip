@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11n";                       // ← newest published build
+  var BUILD_ID = "2026-06-11o";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -500,7 +500,7 @@
 // stops (landmark ids we visit), and a fly target (city / bounds / landmark).
 const ITINERARY = [
   { day:1, date:"Wed 6/17", leg:"San Francisco", route:"Boston → San Francisco", note:"Rental car · the Presidio for the bridge before check-in", hotel:"hotel_sf", city:"sf", stops:["ggbridge","palace"],
-    res:[{icon:"✈", name:"JetBlue 1833 · Boston → SFO"}] },
+    res:[{icon:"✈", name:"Flight: Boston → San Francisco"}] },
   { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"A full day in the city", hotel:"hotel_sf", city:"sf", stops:["pier39","lombard","cablecar","ferrybldg","chinatown","ggpark","painted"] },
   { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive · call Shell", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:["halfmoonbay","monterey","carmel","bixby","mcway","hearst","moonstone","morro"] },
   { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["solvang","santabarbara","malibupier"],
@@ -511,7 +511,7 @@ const ITINERARY = [
   { day:7, date:"Tue 6/23", leg:"San Diego", route:"Anaheim → San Diego", note:"Down the Orange County coast", hotel:"hotel_sd", bounds:[[32.6,-118.0],[33.75,-117.0]], stops:["newport","laguna","encinitas","lajolla"] },
   { day:8, date:"Wed 6/24", leg:"San Diego", route:"San Diego", note:"Embarcadero · Gaslamp · Coronado · Old Town", hotel:"hotel_sd", city:"sd", stops:["seaport","gaslamp","littleitaly","coronado","oldtown"] },
   { day:9, date:"Thu 6/25", leg:"San Diego", route:"Balboa Park & Zoo, then red-eye home", hotel:null, landmark:"balboa", stops:["balboa","sdzoo"],
-    res:[{icon:"✈", name:"JetBlue 2120 · SAN → Boston", detail:"arrives Fri 6/26"}] },
+    res:[{icon:"✈", name:"Flight home: San Diego → Boston"}] },
 ];
 
 /* ═══════ CITIES ═══════ */
@@ -1547,7 +1547,7 @@ function openCard(id){
   document.querySelector("#card .fact").style.display=lm.fact?"":"none";
   let tip=lm.tip||"";
   if (lm.tier==="context"){                              // append a rough how-far-from-SF line
-    const o={lat:37.7749,lon:-122.4194}, crow=milesBetween(o,lm), road=crow*1.3, mins=road/50*60;
+    const o={lat:37.7749,lon:-122.4194}, crow=milesBetween(o,lm), road=crow*1.2, mins=driveMinutes(road);
     const dist="≈ "+Math.round(road).toLocaleString()+" mi from San Francisco · ~"+fmtTime(mins)+" by car (rough).";
     tip = tip ? dist+" "+tip : dist;
   }
@@ -1866,6 +1866,13 @@ function fmtTime(mins){
   const h=Math.floor(mins/60), m=mins%60;
   return h+" h"+(m?" "+m+" m":"");
 }
+// California drive time: average speed runs low (coast roads + city traffic),
+// only climbing toward highway speed over long distances. ~28 mph in town → ~65 mph open road.
+// Tuned so a ~15 mi city hop ≈ 25 min and SF→LA ≈ 6.5 h (matches Google Maps).
+function driveMinutes(roadMiles){
+  const mph = Math.max(28, Math.min(65, 28 + roadMiles*0.7));
+  return roadMiles/mph*60;
+}
 function dropPin(p,idx){
   const g=el("g",{class:"mpin"},mGroup);
   el("circle",{class:"mpin-core",cx:0,cy:0,r:4},g);
@@ -1885,7 +1892,7 @@ function computeMeasure(){
   if(mLine) mLine.remove();
   mLine=el("path",{d:`M${px(a.lon)} ${py(a.lat)} L${px(b.lon)} ${py(b.lat)}`,class:"mline"},mGroup);
   mGroup.insertBefore(mLine, mGroup.firstChild);   // line beneath the pins
-  const crow=milesBetween(a,b), road=crow*1.3, mins=road/50*60;   // ~×1.3 winding, ~50 mph
+  const crow=milesBetween(a,b), road=crow*1.2, mins=driveMinutes(road);   // ×1.2 winding, CA speeds
   $("measMain").textContent="~ "+fmtTime(mins)+" by car";
   $("measSub").textContent="≈ "+Math.round(road)+" mi by road · "+Math.round(crow)+" mi as the crow flies";
   $("measOut").classList.add("show");
