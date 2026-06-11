@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11h";                       // ← newest published build
+  var BUILD_ID = "2026-06-11i";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -170,6 +170,7 @@
   .key.food{background:var(--gold); border:1.2px solid var(--ink); transform:rotate(45deg)}
   .key.context{background:var(--panel); border:1.4px solid var(--ink-soft); border-radius:50%}
   .key.wish{background:var(--stamp); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+  .key.hotel{background:var(--ink); clip-path:polygon(50% 0,100% 40%,100% 100%,0 100%,0 40%)}
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:7px}
   .ichip{
     font-size:11px; letter-spacing:.04em; padding:4px 9px; border:1.2px solid var(--panel-edge);
@@ -277,6 +278,9 @@
   .marker.t-wish text{font-weight:600}
   .wish-badge{font-family:var(--body); font-size:7px; font-weight:700;
     paint-order:stroke; stroke:var(--paper); stroke-width:2px; stroke-linejoin:round}
+  /* hotel (where we're staying) markers */
+  .marker.t-hotel .dot{fill:var(--ink); stroke:var(--paper); stroke-width:1}
+  .marker.t-hotel text{font-weight:600}
   .marker text{
     font-family:var(--body); font-size:10.5px; font-weight:600; letter-spacing:.05em;
     fill:var(--ink); paint-order:stroke; stroke:var(--paper); stroke-width:3px;
@@ -354,6 +358,7 @@
   <g id="gContext"></g>
   <g id="gLandmarks"></g>
   <g id="gWish"></g>
+  <g id="gHotels"></g>
   <g id="gMeasure"></g>
   <g id="gYou"></g>
 </svg>
@@ -407,6 +412,7 @@
       <label><input type="checkbox" id="tierFood"> <span class="key food"></span> Food &amp; treats</label>
       <label><input type="checkbox" id="tierContext" checked> <span class="key context"></span> Beyond the trip <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(cities &amp; landmarks)</span></label>
       <label><input type="checkbox" id="tierWish" checked> <span class="key wish"></span> Family wish list <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(see Plan tab)</span></label>
+      <label><input type="checkbox" id="tierHotel" checked> <span class="key hotel"></span> Where we’re staying <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(hotels)</span></label>
     </div>
 
     <div class="layerbox">
@@ -922,6 +928,32 @@ const WISH = [
     url:"https://legionsandiego.com/" },
 ];
 
+/* ═══════ HOTELS — where we're staying (from the itinerary) ═══════════════════
+   Markers + cards with nights, address, website and a Google Maps link. Toggle
+   with the "Where we're staying" checkbox in the Index. ═══════════════════════ */
+const HOTELS = [
+  { id:"hotel_sf", name:"Club Wyndham Canterbury", cat:"Hotel", region:"San Francisco",
+    lat:37.7887, lon:-122.4118, nights:"Jun 17–18 · 2 nights",
+    about:"Our home base in San Francisco — a resort in a classic 1920s building near Union Square and the cable-car lines.",
+    address:"750 Sutter St, San Francisco, CA 94109",
+    url:"https://clubwyndham.wyndhamdestinations.com/us/en/resorts/wyndham-hotels-resorts/united-states-of-america/california/san-francisco/club-wyndham-canterbury" },
+  { id:"hotel_solvang", name:"Royal Copenhagen Inn", cat:"Inn", region:"Solvang",
+    lat:34.5961, lon:-120.1428, nights:"Jun 19 · 1 night",
+    about:"A Danish-style inn right on Solvang’s main street, an easy walk to the bakeries, windmills and the little mermaid.",
+    address:"1579 Mission Dr, Solvang, CA 93463",
+    url:"https://www.royalcopenhageninn.com/" },
+  { id:"hotel_anaheim", name:"Peacock Suites", cat:"All-suite hotel", region:"Anaheim",
+    lat:33.8066, lon:-117.9114, nights:"Jun 20–22 · 3 nights",
+    about:"An all-suite hotel in Anaheim, just a few minutes from Disneyland — our base for the Los Angeles leg.",
+    address:"1745 S Anaheim Blvd, Anaheim, CA 92805",
+    url:"https://clubwyndham.wyndhamdestinations.com/us/en/resorts/wyndham-hotels-resorts/united-states-of-america/california/anaheim/peacock-suites" },
+  { id:"hotel_sd", name:"Inn at the Park", cat:"Suites hotel", region:"San Diego",
+    lat:32.7372, lon:-117.1617, nights:"Jun 23–25 · 3 nights",
+    about:"A suites hotel in Bankers Hill, right beside Balboa Park and a short hop from the zoo and the Gaslamp Quarter.",
+    address:"525 Spruce St, San Diego, CA 92103",
+    url:"https://www.shellhospitality.com/hotels/inn-at-the-park" },
+];
+
 /* ═══════ MERGE: one list for rendering, index and itinerary lookups ═══════ */
 const mapsURL = pid => "https://www.google.com/maps/place/?q=place_id:"+pid;
 const ALL = [
@@ -930,10 +962,12 @@ const ALL = [
   ...FOOD.map(l => ({...l, tier:"food", url:mapsURL(l.pid)})),
   ...CONTEXT.map(l => ({...l, tier:"context", city:l.city||"beyond", interest:"Beyond"})),
   ...WISH.map(l => ({...l, tier:"wish", city:"wish", interest:"Wish"})),
+  ...HOTELS.map(l => ({...l, tier:"hotel", city:"hotel", interest:"Hotel"})),
 ];
 const byId = id => ALL.find(l => l.id===id);
 const FAMCOLOR = Object.fromEntries(FAMILY.map(m => [m.initial, m.color]));
 const STAR = "M0,-5 L1.18,-1.62 L4.76,-1.55 L1.9,0.62 L2.94,4.05 L0,2 L-2.94,4.05 L-1.9,0.62 L-4.76,-1.55 L-1.18,-1.62 Z";
+const HOUSE = "M0,-5 L4.6,-0.6 L4.6,4.6 L-4.6,4.6 L-4.6,-0.6 Z";
 
 // Colorado River, Nevada diagonal, Oregon line. [lat, lon] pairs.
 const COAST = [
@@ -1122,6 +1156,7 @@ for (const lm of ALL){
   const x=px(lm.lon), y=py(lm.lat);
   const parent = lm.tier==="context" ? $("gContext")
                : lm.tier==="wish"    ? $("gWish")
+               : lm.tier==="hotel"   ? $("gHotels")
                : lm.city==="coast"   ? $("gCoastStops")
                : $("gLandmarks");
   const ctx = lm.tier==="context" ? " ctx-"+(lm.kind||"city") : "";
@@ -1136,6 +1171,8 @@ for (const lm of ALL){
     el("path",{class:"dot",d:STAR,fill:c,stroke:"var(--paper)","stroke-width":1},g);   // ★
     const bi=el("text",{x:6.5,y:-4,class:"wish-badge",fill:c},g); bi.textContent=lm.who;
   }
+  else if (lm.tier==="hotel")
+    el("path",{class:"dot",d:HOUSE},g);                                                 // ⌂
   else
     el("circle",{class:"dot",cx:0,cy:0,r:3.6},g);
   const t=el("text",{x:0,y:15},g); t.textContent=lm.name;
@@ -1393,7 +1430,8 @@ function openCard(id){
   cardId=id;
   const tierLabel = lm.tier==="food" ? "Food" : lm.tier==="hidden" ? "Hidden gem"
                   : lm.tier==="context" ? "Not on the trip"
-                  : lm.tier==="wish" ? lm.who+"’s wish list" : "";
+                  : lm.tier==="wish" ? lm.who+"’s wish list"
+                  : lm.tier==="hotel" ? "Where we’re staying" : "";
   const place = CITIES[lm.city] ? CITIES[lm.city].name : (lm.region || "Beyond the route");
   $("cEyebrow").textContent=place+" · "+lm.cat+(tierLabel?" · "+tierLabel:"");
   $("cName").textContent=lm.name;
@@ -1407,13 +1445,19 @@ function openCard(id){
     tip = tip ? dist+" "+tip : dist;
   }
   if (lm.tier==="wish" && lm.address) tip = "📍 "+lm.address+(tip?" · "+tip:"");
+  if (lm.tier==="hotel"){
+    const bits=[]; if(lm.nights) bits.push(lm.nights); if(lm.address) bits.push("📍 "+lm.address);
+    tip = bits.join(" · ");
+  }
   $("cTip").textContent=tip; $("cTip").style.display=tip?"":"none";
-  if (lm.tier==="wish" && lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Visit website ↗"; }
+  if ((lm.tier==="wish"||lm.tier==="hotel") && lm.url){
+    $("cWiki").href=lm.url; $("cWiki").textContent = lm.tier==="hotel" ? "Hotel website ↗" : "Visit website ↗";
+  }
   else if (lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Open in Maps ↗"; }
   else { $("cWiki").href=wikiURL(lm); $("cWiki").textContent="Wikipedia ↗"; }
   // Google Maps "drive there" link — for everything except hidden/food (those already link to Maps)
   const maps=$("cMaps");
-  if (lm.url && lm.tier!=="wish"){ maps.style.display="none"; }
+  if (lm.url && lm.tier!=="wish" && lm.tier!=="hotel"){ maps.style.display="none"; }
   else { maps.href=mapsNavURL(lm); maps.style.display=""; }
   $("card").classList.add("open");
   placeCard();
@@ -1456,13 +1500,14 @@ $("tabPlan").onclick=()=>switchTab("plan");
 
 const GROUP_ORDER=["sf","coast","la","sd"];
 const INTERESTS=["All","Icons","Animals","Rides & Parks","Beaches","Science & Space","History","Art & Odd","Food","Sweet Treats"];
-const tiers={famous:true, hidden:false, food:false, context:true, wish:true};
+const tiers={famous:true, hidden:false, food:false, context:true, wish:true, hotel:true};
 let interest="All";
 
 function tierGlyph(t){ return "<span class='key "+t+"'></span>"; }
 function passesFilter(lm){
   if (lm.tier==="context") return tiers.context;         // bearings ignore the interest filter
   if (lm.tier==="wish")    return tiers.wish;            // family picks ignore the interest filter
+  if (lm.tier==="hotel")   return tiers.hotel;           // hotels ignore the interest filter
   return tiers[lm.tier] && (interest==="All" || lm.interest===interest);
 }
 
@@ -1475,7 +1520,7 @@ function applyFilters(){
 }
 
 // tier checkboxes
-[["tierFamous","famous"],["tierHidden","hidden"],["tierFood","food"],["tierContext","context"],["tierWish","wish"]].forEach(([id,t])=>{
+[["tierFamous","famous"],["tierHidden","hidden"],["tierFood","food"],["tierContext","context"],["tierWish","wish"],["tierHotel","hotel"]].forEach(([id,t])=>{
   $(id).addEventListener("change",e=>{ tiers[t]=e.target.checked; applyFilters(); });
 });
 
@@ -1497,7 +1542,7 @@ function applyFilters(){
 function ensureTierOn(t){
   if (tiers[t]) return;
   tiers[t]=true;
-  const id = t==="famous"?"tierFamous":t==="hidden"?"tierHidden":t==="food"?"tierFood":t==="context"?"tierContext":"tierWish";
+  const id = t==="famous"?"tierFamous":t==="hidden"?"tierHidden":t==="food"?"tierFood":t==="context"?"tierContext":t==="wish"?"tierWish":"tierHotel";
   $(id).checked=true;
 }
 
@@ -1528,6 +1573,31 @@ function renderIndex(q){
       grp.appendChild(b);
     }
     list.appendChild(grp);
+  }
+  // Where we're staying — hotels from the itinerary
+  {
+    const items=ALL.filter(l=>{
+      if (l.tier!=="hotel") return false;
+      if (q) return (l.name+" "+l.cat+" "+(l.region||"")).toLowerCase().includes(q);
+      return tiers.hotel;
+    });
+    if (items.length){
+      any=true;
+      const grp=document.createElement("div"); grp.className="grp";
+      grp.innerHTML="<h4>Where we’re staying</h4>";
+      for (const lm of items){
+        const b=document.createElement("button"); b.className="idx-item";
+        b.innerHTML=tierGlyph("hotel")+
+          "<span class='nm'> "+lm.name+"</span><span class='ct'>"+lm.region+"</span>";
+        b.onclick=()=>{
+          ensureTierOn("hotel"); applyFilters();
+          flyToLandmark(lm.id); openCard(lm.id);
+          if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
+        };
+        grp.appendChild(b);
+      }
+      list.appendChild(grp);
+    }
   }
   // Beyond-the-trip reference places — cities, landmarks & wild areas, not on the plan
   {
