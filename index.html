@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11i";                       // ← newest published build
+  var BUILD_ID = "2026-06-11k";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -140,8 +140,9 @@
   #dock header{padding:14px 16px 0}
   #dock .tabs{display:flex; gap:0; margin-top:10px; border-bottom:1.5px solid var(--panel-edge)}
   #dock .tabs button{
-    flex:1; padding:8px 0; font-size:11.5px; letter-spacing:.18em; text-transform:uppercase;
+    flex:1; padding:8px 2px; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
     font-weight:600; color:var(--ink-soft); border-bottom:3px solid transparent; margin-bottom:-1.5px;
+    white-space:nowrap;
   }
   #dock .tabs button.active{color:var(--ink); border-bottom-color:var(--stamp)}
   #dock .tabpane{flex:1; overflow-y:auto; padding:12px 16px 28px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
@@ -195,15 +196,30 @@
   /* plan tab */
   .plan-note{font-size:12px; font-style:italic; color:var(--ink-soft); line-height:1.45; margin-bottom:10px}
   .plan-note code{font-family:ui-monospace,monospace; font-style:normal; font-size:11px; background:rgba(59,49,31,.08); padding:1px 4px}
-  .day{display:flex; gap:10px; padding:9px 2px; border-bottom:1px dotted rgba(59,49,31,.3); align-items:baseline}
+  /* collapsible legs */
+  .leg{border-bottom:1px solid rgba(59,49,31,.28)}
+  .leg-sum{cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:8px; padding:11px 2px}
+  .leg-sum::-webkit-details-marker{display:none}
+  .leg-sum::after{content:"▾"; margin-left:auto; color:var(--ink-soft); font-size:11px}
+  .leg:not([open]) .leg-sum::after{content:"▸"}
+  .leg-name{font-family:var(--sc); font-size:17px; color:var(--ink)}
+  .leg-meta{font-size:10.5px; color:var(--ink-soft); letter-spacing:.02em}
+  .leg-hotel{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft);
+    cursor:pointer; padding:0 2px 8px}
+  .leg-hotel .key{width:9px; height:9px}
+  .day{display:flex; gap:10px; padding:8px 2px 9px; border-top:1px dotted rgba(59,49,31,.3); align-items:flex-start}
   .day .badge{
     font-family:var(--sc); font-size:13px; min-width:46px; text-align:center;
     border:1.5px solid var(--ink); padding:2px 4px; background:#FBF6E9; flex:none;
   }
-  .day .ttl{flex:1; font-size:14px; line-height:1.3; text-align:left; cursor:pointer}
-  .day .ttl small{display:block; font-size:11px; color:var(--ink-soft); font-style:italic}
-  .day .rm{color:var(--ink-soft); font-size:15px; padding:0 4px}
-  .day.sample .badge{border-style:dashed; color:var(--ink-soft)}
+  .day-body{flex:1; display:flex; flex-direction:column; gap:4px}
+  .day-route{font-size:14px; line-height:1.25; text-align:left; font-weight:500; color:var(--ink); cursor:pointer}
+  .day-route:active{color:var(--stamp)}
+  .day-note{font-size:11.5px; font-style:italic; color:var(--ink-soft)}
+  .day-stops{display:flex; flex-wrap:wrap; gap:5px; margin-top:2px}
+  .stop-chip{font-size:11px; padding:3px 8px; border:1px solid rgba(59,49,31,.3); background:#FBF6E9;
+    color:var(--ink); cursor:pointer}
+  .stop-chip:active{background:rgba(162,59,43,.08)}
 
   /* family wish list (plan tab) */
   .wish-member{display:flex; gap:11px; padding:10px 2px; border-bottom:1px dotted rgba(59,49,31,.3)}
@@ -399,7 +415,8 @@
     <button class="closer" id="dockClose" aria-label="Close">×</button>
     <div class="tabs">
       <button id="tabIndex" class="active">Index</button>
-      <button id="tabPlan">The Plan</button>
+      <button id="tabPlan">Plan</button>
+      <button id="tabWish">Wish list</button>
     </div>
   </header>
   <div class="tabpane" id="paneIndex">
@@ -411,7 +428,7 @@
       <label><input type="checkbox" id="tierHidden"> <span class="key hidden"></span> Hidden gems &amp; oddities</label>
       <label><input type="checkbox" id="tierFood"> <span class="key food"></span> Food &amp; treats</label>
       <label><input type="checkbox" id="tierContext" checked> <span class="key context"></span> Beyond the trip <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(cities &amp; landmarks)</span></label>
-      <label><input type="checkbox" id="tierWish" checked> <span class="key wish"></span> Family wish list <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(see Plan tab)</span></label>
+      <label><input type="checkbox" id="tierWish" checked> <span class="key wish"></span> Family wish list <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(see Wish list tab)</span></label>
       <label><input type="checkbox" id="tierHotel" checked> <span class="key hotel"></span> Where we’re staying <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(hotels)</span></label>
     </div>
 
@@ -434,8 +451,10 @@
     <div id="idxList"></div>
   </div>
   <div class="tabpane" id="panePlan" style="display:none">
-    <p class="plan-note">The road-trip route, June 17–26. Tap a day to fly to that leg of the trip. To change the schedule, edit the <code>ITINERARY</code> list at the top of this file.</p>
+    <p class="plan-note">Our route, June 17–26, grouped by where we’re based. Tap a leg to fold it; tap a day’s route to fly there, a stop to open it, or the hotel to see where we sleep. Edit the <code>ITINERARY</code> list at the top of the file.</p>
     <div id="planList"></div>
+  </div>
+  <div class="tabpane" id="paneWish" style="display:none">
     <div id="wishWrap"></div>
   </div>
 </aside>
@@ -470,16 +489,18 @@
    LANDMARKS), `city` ("sf"/"la"/"sd"), or `bounds` for a custom
    fly-to region. Tapping a day flies the map to that leg.
    ═══════════════════════════════════════════════════════════════ */
+// Each day: route (where → where), an optional note, the hotel id we sleep at,
+// stops (landmark ids we visit), and a fly target (city / bounds / landmark).
 const ITINERARY = [
-  { day:1, date:"Wed 6/17", title:"Boston → San Francisco · Club Wyndham Canterbury", city:"sf" },
-  { day:2, date:"Thu 6/18", title:"San Francisco · Club Wyndham Canterbury", city:"sf" },
-  { day:3, date:"Fri 6/19", title:"Highway 1 — SF → Solvang · Royal Copenhagen Inn", bounds:[[34.45,-122.7],[37.7,-119.9]] },
-  { day:4, date:"Sat 6/20", title:"Solvang → Anaheim, via Santa Barbara & Malibu · Peacock Suites", bounds:[[33.7,-120.4],[34.75,-117.8]] },
-  { day:5, date:"Sun 6/21", title:"Los Angeles day · Peacock Suites", city:"la" },
-  { day:6, date:"Mon 6/22", title:"Universal Studios · Peacock Suites", landmark:"universal" },
-  { day:7, date:"Tue 6/23", title:"Anaheim → San Diego, via Newport, Laguna & La Jolla · Inn at the Park", bounds:[[32.6,-118.0],[33.75,-117.0]] },
-  { day:8, date:"Wed 6/24", title:"San Diego — Coronado, Old Town, Gaslamp · Inn at the Park", city:"sd" },
-  { day:9, date:"Thu 6/25", title:"Balboa Park & Zoo → red-eye SAN → BOS", landmark:"balboa" },
+  { day:1, date:"Wed 6/17", leg:"San Francisco", route:"Boston → San Francisco", note:"Fly in & settle", hotel:"hotel_sf", city:"sf", stops:[] },
+  { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"Explore the city", hotel:"hotel_sf", city:"sf", stops:[] },
+  { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:[] },
+  { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["santabarbara","malibupier"] },
+  { day:5, date:"Sun 6/21", leg:"Los Angeles & Anaheim", route:"Los Angeles", note:"LA day", hotel:"hotel_anaheim", city:"la", stops:[] },
+  { day:6, date:"Mon 6/22", leg:"Los Angeles & Anaheim", route:"Universal Studios", hotel:"hotel_anaheim", landmark:"universal", stops:[] },
+  { day:7, date:"Tue 6/23", leg:"San Diego", route:"Anaheim → San Diego", note:"Down the Orange County coast", hotel:"hotel_sd", bounds:[[32.6,-118.0],[33.75,-117.0]], stops:["newport","laguna","lajolla"] },
+  { day:8, date:"Wed 6/24", leg:"San Diego", route:"San Diego", note:"Coronado · Old Town · Gaslamp", hotel:"hotel_sd", city:"sd", stops:["coronado","oldtown"] },
+  { day:9, date:"Thu 6/25", leg:"San Diego", route:"Balboa Park & Zoo, then red-eye home", hotel:null, landmark:"balboa", stops:["balboa","sdzoo"] },
 ];
 
 /* ═══════ CITIES ═══════ */
@@ -1489,14 +1510,14 @@ const dock=$("dock");
 $("dockBtn").onclick=()=>{ switchTab("index"); dock.classList.toggle("open"); };
 $("planBtn").onclick=()=>{ switchTab("plan"); dock.classList.add("open"); };
 $("dockClose").onclick=()=>dock.classList.remove("open");
+const TABS=[["tabIndex","paneIndex","index"],["tabPlan","panePlan","plan"],["tabWish","paneWish","wish"]];
 function switchTab(t){
-  $("tabIndex").classList.toggle("active",t==="index");
-  $("tabPlan").classList.toggle("active",t==="plan");
-  $("paneIndex").style.display=t==="index"?"":"none";
-  $("panePlan").style.display=t==="plan"?"":"none";
+  for (const [tab,pane,key] of TABS){
+    $(tab).classList.toggle("active", t===key);
+    $(pane).style.display = t===key ? "" : "none";
+  }
 }
-$("tabIndex").onclick=()=>switchTab("index");
-$("tabPlan").onclick=()=>switchTab("plan");
+TABS.forEach(([tab,,key])=>{ $(tab).onclick=()=>switchTab(key); });
 
 const GROUP_ORDER=["sf","coast","la","sd"];
 const INTERESTS=["All","Icons","Animals","Rides & Parks","Beaches","Science & Space","History","Art & Odd","Food","Sweet Treats"];
@@ -1599,6 +1620,31 @@ function renderIndex(q){
       list.appendChild(grp);
     }
   }
+  // Family wish list — each member's picks (also has its own Wish list tab)
+  {
+    const items=ALL.filter(l=>{
+      if (l.tier!=="wish") return false;
+      if (q) return (l.name+" "+l.cat+" "+(l.who||"")+" "+(l.region||"")).toLowerCase().includes(q);
+      return tiers.wish;
+    });
+    if (items.length){
+      any=true;
+      const grp=document.createElement("div"); grp.className="grp";
+      grp.innerHTML="<h4>Family wish list</h4>";
+      for (const lm of items){
+        const b=document.createElement("button"); b.className="idx-item";
+        b.innerHTML=tierGlyph("wish")+
+          "<span class='nm'> "+lm.name+"</span><span class='ct'>"+lm.cat+"</span>";
+        b.onclick=()=>{
+          ensureTierOn("wish"); applyFilters();
+          flyToLandmark(lm.id); openCard(lm.id);
+          if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
+        };
+        grp.appendChild(b);
+      }
+      list.appendChild(grp);
+    }
+  }
   // Beyond-the-trip reference places — cities, landmarks & wild areas, not on the plan
   {
     const items=ALL.filter(l=>{
@@ -1628,27 +1674,65 @@ function renderIndex(q){
 }
 $("search").addEventListener("input",e=>renderIndex(e.target.value));
 
+const closeDockOnPhone=()=>{ if(matchMedia("(max-width:760px)").matches) dock.classList.remove("open"); };
+const shortName=lm=>lm.name.split(/[·&—]/)[0].trim();
+function openStop(id){                                    // fly to a place + open its card
+  const lm=byId(id); if(!lm) return;
+  ensureTierOn(lm.tier); applyFilters();
+  flyToLandmark(id); openCard(id); closeDockOnPhone();
+}
+function flyDay(d){                                        // fly to a day's leg/region
+  if (d.landmark){ openStop(d.landmark); return; }
+  if (d.bounds){ flyTo(fitBounds(d.bounds)); $("card").classList.remove("open"); }
+  else if (d.city && CITIES[d.city]){ flyToCity(d.city); $("card").classList.remove("open"); }
+  closeDockOnPhone();
+}
+function dayRow(d){
+  const row=document.createElement("div"); row.className="day";
+  const stops=(d.stops||[]).map(byId).filter(Boolean);
+  const chips=stops.map(s=>"<button class='stop-chip' data-id='"+s.id+"'>"+shortName(s)+"</button>").join("");
+  row.innerHTML=
+    "<span class='badge'>"+(d.date||("Day "+d.day))+"</span>"+
+    "<div class='day-body'>"+
+      "<button class='day-route'>"+d.route+"</button>"+
+      (d.note?"<span class='day-note'>"+d.note+"</span>":"")+
+      (chips?"<div class='day-stops'>"+chips+"</div>":"")+
+    "</div>";
+  row.querySelector(".day-route").onclick=()=>flyDay(d);
+  row.querySelectorAll(".stop-chip").forEach(b=>b.onclick=()=>openStop(b.dataset.id));
+  return row;
+}
 function renderPlan(){
   const list=$("planList"); list.innerHTML="";
   const days=[...ITINERARY].sort((a,b)=>a.day-b.day);
   if(!days.length){
-    list.innerHTML="<p class='plan-note'>No days planned yet. Tap “Add to plan” on any landmark, or fill in the ITINERARY list at the top of the file.</p>";
+    list.innerHTML="<p class='plan-note'>No days planned yet. Fill in the ITINERARY list at the top of the file.</p>";
     return;
   }
-  days.forEach((d,i)=>{
-    const row=document.createElement("div"); row.className="day"+(d.sample?" sample":"");
-    const lm=d.landmark?byId(d.landmark):null;
-    row.innerHTML="<span class='badge'>"+(d.date||("Day "+d.day))+"</span>"+
-      "<button class='ttl'>"+d.title+"</button>"+
-      "<button class='rm' aria-label='Remove'>×</button>";
-    row.querySelector(".ttl").onclick=()=>{
-      if (lm){ flyToLandmark(lm.id); openCard(lm.id); }
-      else if (d.bounds){ flyTo(fitBounds(d.bounds)); $("card").classList.remove("open"); }
-      else if (d.city && CITIES[d.city].bounds){ flyToCity(d.city); $("card").classList.remove("open"); }
-      if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
-    };
-    row.querySelector(".rm").onclick=()=>{ ITINERARY.splice(ITINERARY.indexOf(d),1); renderPlan(); };
-    list.appendChild(row);
+  // group consecutive days into legs (San Francisco · The Coast → Solvang · …)
+  const legs=[];
+  days.forEach(d=>{
+    let g=legs[legs.length-1];
+    if(!g || g.name!==(d.leg||"")){ g={name:d.leg||"", days:[]}; legs.push(g); }
+    g.days.push(d);
+  });
+  legs.forEach(leg=>{
+    const det=document.createElement("details"); det.className="leg"; det.open=true;
+    const first=leg.days[0], last=leg.days[leg.days.length-1];
+    const range=first.date===last.date?first.date:(first.date+" – "+last.date);
+    const hotel=first.hotel?byId(first.hotel):null;
+    const sum=document.createElement("summary"); sum.className="leg-sum";
+    sum.innerHTML="<span class='leg-name'>"+(leg.name||"Trip")+"</span>"+
+                  "<span class='leg-meta'>"+range+(hotel?" · "+hotel.name:"")+"</span>";
+    det.appendChild(sum);
+    if(hotel){
+      const hr=document.createElement("button"); hr.className="leg-hotel";
+      hr.innerHTML="<span class='key hotel'></span> Staying at "+hotel.name;
+      hr.onclick=()=>openStop(hotel.id);
+      det.appendChild(hr);
+    }
+    leg.days.forEach(d=>det.appendChild(dayRow(d)));
+    list.appendChild(det);
   });
 }
 
