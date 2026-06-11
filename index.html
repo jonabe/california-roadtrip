@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11g";                       // ← newest published build
+  var BUILD_ID = "2026-06-11h";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -443,6 +443,7 @@
   <p class="tip" id="cTip"></p>
   <div class="btns">
     <a class="chip" id="cWiki" target="_blank" rel="noopener">Wikipedia ↗</a>
+    <a class="chip" id="cMaps" target="_blank" rel="noopener">Google Maps ↗</a>
   </div>
 </div>
 
@@ -909,6 +910,16 @@ const WISH = [
     fact:"The thing to order is the chili-honey-tossed fried chicken.",
     address:"709 N Western Ave, Los Angeles, CA 90029",
     url:"https://www.lecoupefriedchicken.com/" },
+  { id:"atos", who:"J", name:"Atos Jiu-Jitsu HQ", cat:"Brazilian jiu-jitsu",
+    region:"Kearny Mesa, San Diego", lat:32.8233, lon:-117.1535,
+    about:"The world headquarters of Atos Jiu-Jitsu in San Diego — one of the most decorated competitive Brazilian jiu-jitsu academies on Earth, led by André Galvão.",
+    address:"4810 Mercury St, San Diego, CA 92111",
+    url:"https://atosjiujitsuhq.com/" },
+  { id:"legion", who:"J", name:"Legion American Jiu-Jitsu HQ", cat:"Brazilian jiu-jitsu",
+    region:"Miramar, San Diego", lat:32.8988, lon:-117.1426,
+    about:"The San Diego headquarters of Legion American Jiu-Jitsu, a respected competition BJJ team, up on Miramar Road.",
+    address:"7550 Miramar Rd, Ste 330, San Diego, CA 92126",
+    url:"https://legionsandiego.com/" },
 ];
 
 /* ═══════ MERGE: one list for rendering, index and itinerary lookups ═══════ */
@@ -1370,6 +1381,12 @@ function wikiURL(lm){
   const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
   return "https://en.wikipedia.org/wiki/Special:Search?go=Go&search="+encodeURIComponent(q);
 }
+// Google Maps link (name + locality → drops the named place, one tap to drive there)
+function mapsNavURL(lm){
+  const label = lm.name.split("·")[0].trim();
+  const loc = CITIES[lm.city] ? CITIES[lm.city].name : (lm.region||"");
+  return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(label+(loc?", "+loc:""));
+}
 let cardId=null;
 function openCard(id){
   const lm=byId(id); if(!lm) return;
@@ -1394,6 +1411,10 @@ function openCard(id){
   if (lm.tier==="wish" && lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Visit website ↗"; }
   else if (lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Open in Maps ↗"; }
   else { $("cWiki").href=wikiURL(lm); $("cWiki").textContent="Wikipedia ↗"; }
+  // Google Maps "drive there" link — for everything except hidden/food (those already link to Maps)
+  const maps=$("cMaps");
+  if (lm.url && lm.tier!=="wish"){ maps.style.display="none"; }
+  else { maps.href=mapsNavURL(lm); maps.style.display=""; }
   $("card").classList.add("open");
   placeCard();
 }
