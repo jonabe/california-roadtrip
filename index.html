@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11p";                       // ← newest published build
+  var BUILD_ID = "2026-06-11q";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -227,6 +227,9 @@
   .res-body{flex:1; display:flex; flex-direction:column; gap:1px}
   .res-name{font-weight:600; color:var(--ink)}
   .res-detail{font-size:11px; color:var(--ink-soft); font-style:italic}
+  .res-link{cursor:pointer}
+  .res-link:active{background:rgba(162,59,43,.13)}
+  .res-go{margin-left:auto; align-self:center; color:var(--stamp); font-size:11px}
 
   /* family wish list (plan tab) */
   .wish-member{display:flex; gap:11px; padding:10px 2px; border-bottom:1px dotted rgba(59,49,31,.3)}
@@ -318,8 +321,9 @@
   .plaque line{stroke:var(--ink); stroke-width:.8; opacity:.6}
 
   /* level-of-detail: classes set on <svg> root */
-  #gLandmarks, #gPlaques, #gGeoLabels{transition:opacity .3s ease}
-  #map.z-state #gLandmarks{opacity:0; pointer-events:none}
+  #gLandmarks, #gWish, #gHotels, #gPlaques, #gGeoLabels{transition:opacity .3s ease}
+  /* hotels, wishes & landmarks only appear once you zoom in */
+  #map.z-state #gLandmarks, #map.z-state #gWish, #map.z-state #gHotels{opacity:0; pointer-events:none}
   #gCoastStops text{transition:opacity .3s ease}
   #map.z-far #gCoastStops text{opacity:0}
   #map.z-city  #gPlaques{opacity:0; pointer-events:none}
@@ -504,10 +508,10 @@ const ITINERARY = [
   { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"A full day in the city", hotel:"hotel_sf", city:"sf", stops:["pier39","lombard","cablecar","ferrybldg","chinatown","ggpark","painted"] },
   { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive · call Shell", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:["halfmoonbay","monterey","carmel","bixby","mcway","hearst","moonstone","morro"] },
   { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["solvang","santabarbara","malibupier"],
-    res:[{icon:"🍽", name:"Dinner — Malibu Farm", detail:"23000 Pacific Coast Hwy, Malibu"}] },
+    res:[{icon:"🍽", id:"malibufarm", name:"Dinner — Malibu Farm", detail:"23000 Pacific Coast Hwy, Malibu"}] },
   { day:5, date:"Sun 6/21", leg:"Los Angeles & Anaheim", route:"Los Angeles", note:"Hollywood · Sunset Strip · Beverly Hills · the beaches", hotel:"hotel_anaheim", city:"la", stops:["hollywood","erewhon","walkoffame","tcl","sunsetstrip","chateau","carneys","mels","rodeo","rodeosteps","lacma","labrea","santamonica","venice","thirdst"] },
   { day:6, date:"Mon 6/22", leg:"Los Angeles & Anaheim", route:"Universal Studios", note:"Griffith Park hike, then Universal Studios", hotel:"hotel_anaheim", landmark:"universal", stops:["griffith","universal"],
-    res:[{icon:"🍽", name:"Dinner — Toothsome Chocolate Emporium", detail:"1000 Universal Studios Blvd, Space 99"}] },
+    res:[{icon:"🍽", id:"toothsome", name:"Dinner — Toothsome Chocolate Emporium", detail:"1000 Universal Studios Blvd, Space 99"}] },
   { day:7, date:"Tue 6/23", leg:"San Diego", route:"Anaheim → San Diego", note:"Down the Orange County coast", hotel:"hotel_sd", bounds:[[32.6,-118.0],[33.75,-117.0]], stops:["newport","laguna","encinitas","lajolla"] },
   { day:8, date:"Wed 6/24", leg:"San Diego", route:"San Diego", note:"Embarcadero · Gaslamp · Coronado · Old Town", hotel:"hotel_sd", city:"sd", stops:["seaport","gaslamp","littleitaly","coronado","oldtown"] },
   { day:9, date:"Thu 6/25", leg:"San Diego", route:"Balboa Park & Zoo, then red-eye home", hotel:null, landmark:"balboa", stops:["balboa","sdzoo"],
@@ -920,6 +924,14 @@ const FOOD = [
   hist:"A famously trendy organic grocery and café — the home of LA’s $20 celebrity smoothies.",
   fact:"Its tonic bar and influencer smoothies are an only-in-LA obsession.",
   tip:"Original location at 7660 Beverly Blvd, near The Grove and LACMA." },
+{ id:"malibufarm", city:"la", name:"Malibu Farm", cat:"Pier restaurant", interest:"Food", lat:34.0374, lon:-118.6776,
+  hist:"A breezy farm-to-table café and restaurant right out on Malibu Pier, with the ocean on every side.",
+  fact:"The restaurant sits at the end of the pier; the café is at the entrance.",
+  tip:"23000 Pacific Coast Hwy, on Malibu Pier." },
+{ id:"toothsome", city:"la", name:"Toothsome Chocolate Emporium", cat:"Restaurant & sweets", interest:"Sweet Treats", lat:34.1360, lon:-118.3525,
+  hist:"A steampunk-themed restaurant and chocolate factory at Universal CityWalk, famous for its over-the-top milkshakes.",
+  fact:"Those “gram-worthy,” towering milkshakes are the whole point.",
+  tip:"1000 Universal Studios Blvd, Space 99 · Universal CityWalk." },
 ];
 
 /* ═══════ BEYOND THE TRIP — for bearings only (never in the plan or route) ═══
@@ -1518,7 +1530,7 @@ const WIKI = {
   thirdst:"Third Street Promenade", seaport:"Seaport Village, San Diego",
   gaslamp:"Gaslamp Quarter, San Diego", carneys:"Carney's", mels:"Mel's Drive-In",
   littleitaly:"Little Italy, San Diego", erewhon:"Erewhon Market", sunsetstrip:"Sunset Strip",
-  innout:"In-N-Out Burger",
+  innout:"In-N-Out Burger", malibufarm:"Malibu Farm", toothsome:"Toothsome Chocolate Emporium",
 };
 function wikiURL(lm){
   const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
@@ -1777,9 +1789,11 @@ function dayRow(d){
   const stops=(d.stops||[]).map(byId).filter(Boolean);
   const chips=stops.map(s=>"<button class='stop-chip' data-id='"+s.id+"'>"+shortName(s)+"</button>").join("");
   const resHtml=(d.res||[]).map(r=>
-    "<div class='res'>"+(r.icon?"<span class='res-ic'>"+r.icon+"</span>":"")+
+    "<div class='res"+(r.id?" res-link":"")+"'"+(r.id?" data-resid='"+r.id+"'":"")+">"+
+    (r.icon?"<span class='res-ic'>"+r.icon+"</span>":"")+
     "<span class='res-body'><span class='res-name'>"+(r.time?r.time+" · ":"")+r.name+"</span>"+
-    (r.detail?"<span class='res-detail'>"+r.detail+"</span>":"")+"</span></div>").join("");
+    (r.detail?"<span class='res-detail'>"+r.detail+"</span>":"")+"</span>"+
+    (r.id?"<span class='res-go'>↗</span>":"")+"</div>").join("");
   row.innerHTML=
     "<span class='badge'>"+(d.date||("Day "+d.day))+"</span>"+
     "<div class='day-body'>"+
@@ -1790,6 +1804,7 @@ function dayRow(d){
     "</div>";
   row.querySelector(".day-route").onclick=()=>flyDay(d);
   row.querySelectorAll(".stop-chip").forEach(b=>b.onclick=()=>openStop(b.dataset.id));
+  row.querySelectorAll(".res-link").forEach(b=>b.onclick=()=>openStop(b.dataset.resid));
   return row;
 }
 function renderPlan(){
