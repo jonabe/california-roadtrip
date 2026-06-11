@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11f";                       // ← newest published build
+  var BUILD_ID = "2026-06-11g";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -326,7 +326,8 @@
     #cartouche h1{font-size:24px}
     #cartouche .sub,#cartouche .hint{display:none}
     #cartouche .rule{margin:6px 0 5px}
-    #card{left:8px; right:8px; bottom:calc(112px + env(safe-area-inset-bottom)); max-width:none}
+    #card{left:8px; right:8px; bottom:calc(150px + env(safe-area-inset-bottom)); max-width:none;
+          max-height:calc(100vh - 220px); overflow-y:auto}
     #status{display:none}
     #controls{gap:6px; padding:6px}
     .chip{padding:8px 9px}
@@ -383,8 +384,6 @@
     <button class="chip round" id="zoomIn">+</button>
     <button class="chip round" id="zoomOut">−</button>
     <button class="chip round" id="locBtn" title="Show my location">◎</button>
-  </div>
-  <div class="ctl-row">
     <button class="chip" id="measBtn" title="Measure distance &amp; approximate drive time">📏 Measure</button>
   </div>
 </div>
@@ -1396,7 +1395,28 @@ function openCard(id){
   else if (lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Open in Maps ↗"; }
   else { $("cWiki").href=wikiURL(lm); $("cWiki").textContent="Wikipedia ↗"; }
   $("card").classList.add("open");
+  placeCard();
 }
+// float overlays clear of the controls (handles phone row-wrap, iPad, safe areas)
+function isPhone(){ return matchMedia("(max-width:760px)").matches; }
+function aboveControls(){ return Math.round(innerHeight - $("controls").getBoundingClientRect().top + 10); }
+function placeCard(){
+  const card=$("card");
+  card.style.bottom = isPhone() ? aboveControls()+"px" : "";       // phone: always above controls
+  if (!isPhone()){                                                 // desktop/iPad: only if it collides
+    const r=card.getBoundingClientRect(), c=$("controls").getBoundingClientRect();
+    if (r.left < c.right && r.right > c.left && r.bottom > c.top)
+      card.style.bottom = aboveControls()+"px";
+  }
+}
+function placeMeas(){
+  const m=$("measOut");                                            // always float just above the controls
+  m.style.top="auto"; m.style.bottom=aboveControls()+"px";
+}
+addEventListener("resize",()=>{
+  if($("card").classList.contains("open")) placeCard();
+  if($("measOut").classList.contains("show")) placeMeas();
+});
 $("cardClose").onclick=()=>$("card").classList.remove("open");
 
 /* ═══════ DOCK: tabs, search index, plan ═══════ */
@@ -1603,6 +1623,7 @@ function computeMeasure(){
   $("measMain").textContent="~ "+fmtTime(mins)+" by car";
   $("measSub").textContent="≈ "+Math.round(road)+" mi by road · "+Math.round(crow)+" mi as the crow flies";
   $("measOut").classList.add("show");
+  placeMeas();
 }
 function addMeasurePoint(cx,cy){
   if(mPts.length>=2) clearMeasure();               // a third tap starts a fresh measurement
