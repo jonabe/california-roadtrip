@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11c";                       // ← newest published build
+  var BUILD_ID = "2026-06-11d";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -168,6 +168,7 @@
   .key.famous{background:var(--panel); border:1.6px solid var(--ink); border-radius:50%}
   .key.hidden{background:#6E8B86; border:1.4px solid var(--ink); border-radius:50%}
   .key.food{background:var(--gold); border:1.2px solid var(--ink); transform:rotate(45deg)}
+  .key.context{background:var(--panel); border:1.4px solid var(--ink-soft); border-radius:50%}
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:7px}
   .ichip{
     font-size:11px; letter-spacing:.04em; padding:4px 9px; border:1.2px solid var(--panel-edge);
@@ -249,6 +250,11 @@
   .marker.t-hidden .halo{stroke-dasharray:2 2}
   .marker.t-food .dot{fill:var(--gold); stroke:var(--ink); stroke-width:1.4}
   .marker.t-food text, .marker.t-hidden text{font-size:9.5px}
+  /* beyond-the-trip reference markers */
+  .marker.t-context circle.dot{fill:var(--ink-soft); stroke:var(--paper); stroke-width:1}
+  .marker.t-context.ctx-nature circle.dot{fill:var(--green); stroke:var(--ink); stroke-width:1}
+  .marker.t-context .halo{stroke:var(--ink-soft); opacity:.5}
+  .marker.t-context text{font-style:italic; fill:var(--ink-soft)}
   .marker text{
     font-family:var(--body); font-size:10.5px; font-weight:600; letter-spacing:.05em;
     fill:var(--ink); paint-order:stroke; stroke:var(--paper); stroke-width:3px;
@@ -268,6 +274,8 @@
   #gCoastStops text{transition:opacity .3s ease}
   #map.z-far #gCoastStops text{opacity:0}
   #map.z-city  #gPlaques{opacity:0; pointer-events:none}
+  #gContext{transition:opacity .3s ease}
+  #map.z-city  #gContext{opacity:0; pointer-events:none}
   #map.z-city  #gGeoLabels{opacity:0}
 
   /* ── measure tool ──────────────────────────────────── */
@@ -320,6 +328,7 @@
   <g id="gRoute"></g>
   <g id="gCoastStops"></g>
   <g id="gPlaques"></g>
+  <g id="gContext"></g>
   <g id="gLandmarks"></g>
   <g id="gMeasure"></g>
   <g id="gYou"></g>
@@ -374,6 +383,7 @@
       <label><input type="checkbox" id="tierFamous" checked> <span class="key famous"></span> Famous spots</label>
       <label><input type="checkbox" id="tierHidden"> <span class="key hidden"></span> Hidden gems &amp; oddities</label>
       <label><input type="checkbox" id="tierFood"> <span class="key food"></span> Food &amp; treats</label>
+      <label><input type="checkbox" id="tierContext" checked> <span class="key context"></span> Beyond the trip <span style="color:var(--ink-soft);font-size:11px;font-style:italic">(cities &amp; landmarks)</span></label>
     </div>
 
     <div class="layerbox">
@@ -784,12 +794,81 @@ const FOOD = [
   tip:"" },
 ];
 
+/* ═══════ BEYOND THE TRIP — for bearings only (never in the plan or route) ═══
+   Bigger cities, famous landmarks and wild places that are NOT on our route.
+   Toggle them off with the "Beyond the trip" checkbox in the Index. ═══════ */
+const CONTEXT = [
+// ── Bigger cities, to get your bearings ──
+{ id:"seattle", name:"Seattle", cat:"City · Washington", kind:"city", region:"Washington", lat:47.6062, lon:-122.3321,
+  hist:"The biggest city of the Pacific Northwest, up where Washington meets Puget Sound — home of the Space Needle and the very first Starbucks.",
+  fact:"It’s roughly 800 miles north of San Francisco — about a 13-hour drive, or a 2-hour flight." },
+{ id:"portland", name:"Portland", cat:"City · Oregon", kind:"city", region:"Oregon", lat:45.5152, lon:-122.6784,
+  hist:"Oregon’s quirky “City of Roses,” famous for its bridges, bookshops and doughnuts, set between forest and river.",
+  fact:"Powell’s City of Books is one of the largest bookstores on Earth — it fills a whole city block." },
+{ id:"sacramento", name:"Sacramento", cat:"California’s capital", kind:"city", region:"California", lat:38.5816, lon:-121.4944,
+  hist:"The state capital, born in the Gold Rush where two rivers meet — the end of the Pony Express and the western start of the transcontinental railroad.",
+  fact:"Old Sacramento still has wooden sidewalks and gold-rush storefronts you can walk through." },
+{ id:"reno", name:"Reno", cat:"City · Nevada", kind:"city", region:"Nevada", lat:39.5296, lon:-119.8138,
+  hist:"“The Biggest Little City in the World,” just over the Sierra in Nevada — the gateway to Lake Tahoe.",
+  fact:"It sits above 4,500 feet, so snow can linger on the mountain passes into early summer." },
+{ id:"lasvegas", name:"Las Vegas", cat:"City · Nevada", kind:"city", region:"Nevada", lat:36.1699, lon:-115.1398,
+  hist:"A city of neon light built in the middle of the Mojave Desert, about a 4-hour drive from Los Angeles.",
+  fact:"The Strip is so brightly lit it can be picked out from space." },
+{ id:"phoenix", name:"Phoenix", cat:"City · Arizona", kind:"city", region:"Arizona", lat:33.4484, lon:-112.0740,
+  hist:"Arizona’s sprawling desert capital, ringed by giant saguaro cactus and red rock mountains.",
+  fact:"Summer afternoons here regularly climb past 110°F (43°C)." },
+{ id:"tijuana", name:"Tijuana", cat:"City · Mexico", kind:"city", region:"Mexico", lat:32.5149, lon:-117.0382,
+  hist:"Just across the border south of San Diego — one of the busiest land border crossings in the whole world.",
+  fact:"You can stand in California and look straight into Mexico across the fence." },
+
+// ── Redwoods, wine country & wild places ──
+{ id:"redwoodnp", name:"Redwood Nat’l & State Parks", cat:"Tallest trees on Earth", kind:"nature", region:"Far North Coast", lat:41.2132, lon:-124.0046,
+  hist:"Far up the northern coast grow the tallest living things on the planet — coast redwoods that pass 350 feet and are older than the Roman Empire.",
+  fact:"The tallest, a tree named Hyperion, stands taller than the Statue of Liberty.",
+  tip:"About a 6-hour drive north of San Francisco — a whole trip of its own." },
+{ id:"muirwoods", name:"Muir Woods", cat:"Old-growth redwoods", kind:"nature", region:"Marin County", lat:37.8916, lon:-122.5719,
+  hist:"A hushed cathedral of old-growth redwoods just north of the Golden Gate Bridge — the closest place to the city to walk among giant trees.",
+  fact:"Some of these trees were already towering when Columbus set sail.",
+  tip:"Reserve a parking or shuttle slot ahead of time — it fills up fast." },
+{ id:"napa", name:"Napa Valley", cat:"Wine country", kind:"nature", region:"Wine Country", lat:38.2975, lon:-122.2869,
+  hist:"America’s most famous wine valley, an hour north of San Francisco — rows of vineyards beneath golden hills.",
+  fact:"Kids love “Old Faithful of California” here, a geyser that erupts on its own every few minutes." },
+{ id:"sonoma", name:"Sonoma", cat:"Wine country", kind:"nature", region:"Wine Country", lat:38.2919, lon:-122.4580,
+  hist:"Napa’s greener, quieter neighbour — wineries, redwood groves and the historic plaza where California briefly declared independence in 1846.",
+  fact:"That “Bear Flag Revolt” is why California’s state flag carries a grizzly bear." },
+{ id:"tahoe", name:"Lake Tahoe", cat:"Alpine lake", kind:"nature", region:"Sierra Nevada", lat:39.0968, lon:-120.0324,
+  hist:"A huge, impossibly blue lake high in the Sierra on the California–Nevada line — beaches in summer, ski slopes in winter.",
+  fact:"It’s so deep it never freezes, and holds enough water to cover all of California 14 inches deep." },
+{ id:"yosemite", name:"Yosemite", cat:"National park", kind:"nature", region:"Sierra Nevada", lat:37.8651, lon:-119.5383,
+  hist:"A valley of sheer granite cliffs and thundering waterfalls that helped invent the whole idea of national parks.",
+  fact:"El Capitan is the largest single granite cliff on Earth — roughly 3,000 feet straight up." },
+{ id:"sequoia", name:"Sequoia · Giant Forest", cat:"Biggest trees on Earth", kind:"nature", region:"Sierra Nevada", lat:36.5816, lon:-118.7746,
+  hist:"Home of the giant sequoias — not the tallest trees, but the largest by sheer bulk, with trunks like red towers.",
+  fact:"General Sherman is the biggest single tree on Earth by volume — as heavy as about 10 blue whales." },
+{ id:"deathvalley", name:"Death Valley", cat:"National park", kind:"nature", region:"Mojave Desert", lat:36.5054, lon:-117.0794,
+  hist:"The hottest, driest, lowest place in North America — and strangely beautiful, with salt flats and painted hills.",
+  fact:"It holds the world heat record, 134°F (57°C), and its rocks mysteriously slide across the desert floor." },
+{ id:"joshuatree", name:"Joshua Tree", cat:"National park", kind:"nature", region:"Mojave Desert", lat:33.8734, lon:-115.9010,
+  hist:"A high-desert park full of twisted Joshua trees and giant boulder piles, a couple of hours east of Los Angeles.",
+  fact:"The spiky Joshua “trees” aren’t trees at all — they’re giant members of the agave family." },
+{ id:"grandcanyon", name:"Grand Canyon", cat:"Natural wonder · Arizona", kind:"nature", region:"Arizona", lat:36.1069, lon:-112.1129,
+  hist:"A mile-deep gorge carved by the Colorado River over millions of years — one of the Seven Natural Wonders of the World.",
+  fact:"It’s up to 18 miles across, and the rock at the bottom is nearly 2 billion years old." },
+{ id:"shasta", name:"Mount Shasta", cat:"Volcano", kind:"nature", region:"Northern California", lat:41.4092, lon:-122.1949,
+  hist:"A lone snow-capped volcano towering over far northern California, visible for a hundred miles around.",
+  fact:"It rises over 14,000 feet and carries glaciers near the top even in summer." },
+{ id:"hoover", name:"Hoover Dam", cat:"Engineering landmark", kind:"landmark", region:"Nevada–Arizona", lat:36.0161, lon:-114.7377,
+  hist:"A colossal dam built during the Great Depression that tamed the Colorado River and created Lake Mead, near Las Vegas.",
+  fact:"It holds back so much water that the lake behind it is the largest reservoir in the United States." },
+];
+
 /* ═══════ MERGE: one list for rendering, index and itinerary lookups ═══════ */
 const mapsURL = pid => "https://www.google.com/maps/place/?q=place_id:"+pid;
 const ALL = [
   ...LANDMARKS.map(l => ({...l, tier:"famous", interest:INTEREST[l.id]||"Icons"})),
   ...HIDDEN.map(l => ({...l, tier:"hidden", url:mapsURL(l.pid)})),
   ...FOOD.map(l => ({...l, tier:"food", url:mapsURL(l.pid)})),
+  ...CONTEXT.map(l => ({...l, tier:"context", city:l.city||"beyond", interest:"Beyond"})),
 ];
 const byId = id => ALL.find(l => l.id===id);
 
@@ -975,11 +1054,14 @@ for (const key of ["sf","la","sd"]){
   g.addEventListener("click",e=>{e.stopPropagation(); flyToCity(key);});
 }
 
-// landmark / food / hidden markers
+// landmark / food / hidden / beyond-the-trip markers
 for (const lm of ALL){
   const x=px(lm.lon), y=py(lm.lat);
-  const parent = lm.city==="coast" ? $("gCoastStops") : $("gLandmarks");
-  const g=el("g",{class:"marker kind-"+lm.city+" t-"+lm.tier,"data-id":lm.id},parent);
+  const parent = lm.tier==="context" ? $("gContext")
+               : lm.city==="coast"   ? $("gCoastStops")
+               : $("gLandmarks");
+  const ctx = lm.tier==="context" ? " ctx-"+(lm.kind||"city") : "";
+  const g=el("g",{class:"marker kind-"+lm.city+" t-"+lm.tier+ctx,"data-id":lm.id},parent);
   g.dataset.tier=lm.tier; g.dataset.interest=lm.interest;
   el("circle",{class:"hit",cx:0,cy:-2,r:16,fill:"transparent"},g);
   el("circle",{class:"halo",cx:0,cy:0,r:7,fill:"none",stroke:"var(--ink)","stroke-width":.7,opacity:.45},g);
@@ -1218,6 +1300,13 @@ const WIKI = {
   seaworld:"SeaWorld San Diego", oldtown:"Old Town San Diego State Historic Park",
   legoland:"Legoland California", solvang:"Solvang, California",
   morro:"Morro Rock", malibupier:"Malibu Pier",
+  redwoodnp:"Redwood National and State Parks", muirwoods:"Muir Woods National Monument",
+  napa:"Napa Valley", sonoma:"Sonoma, California", tahoe:"Lake Tahoe",
+  yosemite:"Yosemite National Park", sequoia:"Sequoia National Park",
+  deathvalley:"Death Valley National Park", joshuatree:"Joshua Tree National Park",
+  grandcanyon:"Grand Canyon", shasta:"Mount Shasta", hoover:"Hoover Dam",
+  seattle:"Seattle", portland:"Portland, Oregon", sacramento:"Sacramento, California",
+  reno:"Reno, Nevada", lasvegas:"Las Vegas", phoenix:"Phoenix, Arizona", tijuana:"Tijuana",
 };
 function wikiURL(lm){
   const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
@@ -1227,12 +1316,20 @@ let cardId=null;
 function openCard(id){
   const lm=byId(id); if(!lm) return;
   cardId=id;
-  const tierLabel = lm.tier==="food" ? "Food" : lm.tier==="hidden" ? "Hidden gem" : "";
-  $("cEyebrow").textContent=CITIES[lm.city].name+" · "+lm.cat+(tierLabel?" · "+tierLabel:"");
+  const tierLabel = lm.tier==="food" ? "Food" : lm.tier==="hidden" ? "Hidden gem"
+                  : lm.tier==="context" ? "Not on the trip" : "";
+  const place = CITIES[lm.city] ? CITIES[lm.city].name : (lm.region || "Beyond the route");
+  $("cEyebrow").textContent=place+" · "+lm.cat+(tierLabel?" · "+tierLabel:"");
   $("cName").textContent=lm.name;
   $("cHist").textContent=lm.hist;
   $("cFact").textContent=lm.fact;
-  $("cTip").textContent=lm.tip; $("cTip").style.display=lm.tip?"":"none";
+  let tip=lm.tip||"";
+  if (lm.tier==="context"){                              // append a rough how-far-from-SF line
+    const o={lat:37.7749,lon:-122.4194}, crow=milesBetween(o,lm), road=crow*1.3, mins=road/50*60;
+    const dist="≈ "+Math.round(road).toLocaleString()+" mi from San Francisco · ~"+fmtTime(mins)+" by car (rough).";
+    tip = tip ? dist+" "+tip : dist;
+  }
+  $("cTip").textContent=tip; $("cTip").style.display=tip?"":"none";
   if (lm.url){ $("cWiki").href=lm.url; $("cWiki").textContent="Open in Maps ↗"; }
   else { $("cWiki").href=wikiURL(lm); $("cWiki").textContent="Wikipedia ↗"; }
   $("card").classList.add("open");
@@ -1255,11 +1352,14 @@ $("tabPlan").onclick=()=>switchTab("plan");
 
 const GROUP_ORDER=["sf","coast","la","sd"];
 const INTERESTS=["All","Icons","Animals","Rides & Parks","Beaches","Science & Space","History","Art & Odd","Food","Sweet Treats"];
-const tiers={famous:true, hidden:false, food:false};
+const tiers={famous:true, hidden:false, food:false, context:true};
 let interest="All";
 
 function tierGlyph(t){ return "<span class='key "+t+"'></span>"; }
-function passesFilter(lm){ return tiers[lm.tier] && (interest==="All" || lm.interest===interest); }
+function passesFilter(lm){
+  if (lm.tier==="context") return tiers.context;         // bearings ignore the interest filter
+  return tiers[lm.tier] && (interest==="All" || lm.interest===interest);
+}
 
 function applyFilters(){
   for (const lm of ALL){
@@ -1270,7 +1370,7 @@ function applyFilters(){
 }
 
 // tier checkboxes
-[["tierFamous","famous"],["tierHidden","hidden"],["tierFood","food"]].forEach(([id,t])=>{
+[["tierFamous","famous"],["tierHidden","hidden"],["tierFood","food"],["tierContext","context"]].forEach(([id,t])=>{
   $(id).addEventListener("change",e=>{ tiers[t]=e.target.checked; applyFilters(); });
 });
 
@@ -1292,7 +1392,7 @@ function applyFilters(){
 function ensureTierOn(t){
   if (tiers[t]) return;
   tiers[t]=true;
-  const id = t==="famous"?"tierFamous":t==="hidden"?"tierHidden":"tierFood";
+  const id = t==="famous"?"tierFamous":t==="hidden"?"tierHidden":t==="food"?"tierFood":"tierContext";
   $(id).checked=true;
 }
 
@@ -1323,6 +1423,31 @@ function renderIndex(q){
       grp.appendChild(b);
     }
     list.appendChild(grp);
+  }
+  // Beyond-the-trip reference places — cities, landmarks & wild areas, not on the plan
+  {
+    const items=ALL.filter(l=>{
+      if (l.tier!=="context") return false;
+      if (q) return (l.name+" "+l.cat+" "+(l.region||"")).toLowerCase().includes(q);
+      return tiers.context;
+    });
+    if (items.length){
+      any=true;
+      const grp=document.createElement("div"); grp.className="grp";
+      grp.innerHTML="<h4>Beyond the trip <small style='font-weight:400;font-style:italic;color:var(--ink-soft);font-size:11px'>· not on the plan</small></h4>";
+      for (const lm of items){
+        const b=document.createElement("button"); b.className="idx-item";
+        b.innerHTML=tierGlyph("context")+
+          "<span class='nm'> "+lm.name+"</span><span class='ct'>"+lm.cat+"</span>";
+        b.onclick=()=>{
+          ensureTierOn("context"); applyFilters();
+          flyToLandmark(lm.id); openCard(lm.id);
+          if (matchMedia("(max-width:760px)").matches) dock.classList.remove("open");
+        };
+        grp.appendChild(b);
+      }
+      list.appendChild(grp);
+    }
   }
   if(!any) list.innerHTML="<p class='nores'>Nothing by that name here. Try “zoo,” “beach,” “tacos,” or turn on more layers above.</p>";
 }
