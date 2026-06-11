@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11l";                       // ← newest published build
+  var BUILD_ID = "2026-06-11m";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -493,7 +493,7 @@
 // stops (landmark ids we visit), and a fly target (city / bounds / landmark).
 const ITINERARY = [
   { day:1, date:"Wed 6/17", leg:"San Francisco", route:"Boston → San Francisco", note:"Land 1:25 pm at SFO · rental car · the Presidio for the bridge before check-in", hotel:"hotel_sf", city:"sf", stops:["ggbridge","palace"] },
-  { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"A full day in the city", hotel:"hotel_sf", city:"sf", stops:["pier39","alcatraz","lombard","cablecar","ferrybldg","chinatown","ggpark","painted"] },
+  { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"A full day in the city", hotel:"hotel_sf", city:"sf", stops:["pier39","lombard","cablecar","ferrybldg","chinatown","ggpark","painted"] },
   { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive · call Shell", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:["halfmoonbay","monterey","carmel","bixby","mcway","hearst","moonstone","morro"] },
   { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast · Malibu Farm dinner 4:45 pm", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["solvang","santabarbara","malibupier"] },
   { day:5, date:"Sun 6/21", leg:"Los Angeles & Anaheim", route:"Los Angeles", note:"Hollywood · Sunset Strip · Beverly Hills · the beaches", hotel:"hotel_anaheim", city:"la", stops:["hollywood","walkoffame","tcl","chateau","carneys","mels","rodeo","rodeosteps","lacma","labrea","santamonica","venice","thirdst"] },
