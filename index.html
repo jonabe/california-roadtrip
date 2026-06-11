@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11o";                       // ← newest published build
+  var BUILD_ID = "2026-06-11p";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -750,10 +750,6 @@ const LANDMARKS = [
   hist:"The legendary mile-and-a-half stretch of Sunset Blvd through West Hollywood — giant billboards, music clubs and Hollywood history.",
   fact:"Home to Chateau Marmont, Carney’s and the 24-hour Mel’s Drive-In.",
   tip:"" },
-{ id:"erewhon", city:"la", name:"Erewhon Market", cat:"Organic café & grocery", lat:34.0763, lon:-118.3530,
-  hist:"A famously trendy organic grocery and café — the home of LA’s $20 celebrity smoothies.",
-  fact:"Its tonic bar and influencer smoothies are an only-in-LA obsession.",
-  tip:"Original location at 7660 Beverly Blvd, near The Grove and LACMA." },
 { id:"seaport", city:"sd", name:"Seaport Village", cat:"Waterfront shops", lat:32.7095, lon:-117.1709,
   hist:"A waterfront village of shops and eateries on San Diego Bay, right along the Embarcadero.",
   fact:"It sits beside the USS Midway and the harbor cruises.",
@@ -916,6 +912,14 @@ const FOOD = [
   hist:"A wildly colorful taco shop themed around Mexican wrestling, featured on travel TV, with a gold ‘champions’ booth.",
   fact:"Famous for the surf-and-turf California burrito and a big salsa bar.",
   tip:"" },
+{ id:"innout", city:"sf", name:"In-N-Out Burger", cat:"Burgers", interest:"Food", lat:37.8074, lon:-122.4172,
+  hist:"California’s cult-favorite burger chain — simple, fresh and cheap, with a not-so-secret menu. This one sits right by Fisherman’s Wharf.",
+  fact:"Order it “Animal Style” for grilled onions and extra sauce.",
+  tip:"333 Jefferson St, San Francisco." },
+{ id:"erewhon", city:"la", name:"Erewhon Market", cat:"Organic café & grocery", interest:"Food", lat:34.0763, lon:-118.3530,
+  hist:"A famously trendy organic grocery and café — the home of LA’s $20 celebrity smoothies.",
+  fact:"Its tonic bar and influencer smoothies are an only-in-LA obsession.",
+  tip:"Original location at 7660 Beverly Blvd, near The Grove and LACMA." },
 ];
 
 /* ═══════ BEYOND THE TRIP — for bearings only (never in the plan or route) ═══
@@ -1019,12 +1023,6 @@ const WISH = [
     about:"The San Diego headquarters of Legion American Jiu-Jitsu, a respected competition BJJ team, up on Miramar Road.",
     address:"7550 Miramar Rd, Ste 330, San Diego, CA 92126",
     url:"https://legionsandiego.com/" },
-  { id:"innout", who:"A", name:"In-N-Out Burger", cat:"Burgers",
-    region:"Fisherman’s Wharf, SF", lat:37.8074, lon:-122.4172,
-    about:"California’s cult-favorite burger chain — simple, fresh and cheap, with a not-so-secret menu. This one is right by Fisherman’s Wharf.",
-    fact:"Order it “Animal Style” for grilled onions and extra sauce.",
-    address:"333 Jefferson St, San Francisco, CA 94133",
-    url:"https://www.in-n-out.com/" },
 ];
 
 /* ═══════ HOTELS — where we're staying (from the itinerary) ═══════════════════
@@ -1058,7 +1056,7 @@ const mapsURL = pid => "https://www.google.com/maps/place/?q=place_id:"+pid;
 const ALL = [
   ...LANDMARKS.map(l => ({...l, tier:"famous", interest:INTEREST[l.id]||"Icons"})),
   ...HIDDEN.map(l => ({...l, tier:"hidden", url:mapsURL(l.pid)})),
-  ...FOOD.map(l => ({...l, tier:"food", url:mapsURL(l.pid)})),
+  ...FOOD.map(l => ({...l, tier:"food", url: l.pid ? mapsURL(l.pid) : undefined})),
   ...CONTEXT.map(l => ({...l, tier:"context", city:l.city||"beyond", interest:"Beyond"})),
   ...WISH.map(l => ({...l, tier:"wish", city:"wish", interest:"Wish"})),
   ...HOTELS.map(l => ({...l, tier:"hotel", city:"hotel", interest:"Hotel"})),
@@ -1520,6 +1518,7 @@ const WIKI = {
   thirdst:"Third Street Promenade", seaport:"Seaport Village, San Diego",
   gaslamp:"Gaslamp Quarter, San Diego", carneys:"Carney's", mels:"Mel's Drive-In",
   littleitaly:"Little Italy, San Diego", erewhon:"Erewhon Market", sunsetstrip:"Sunset Strip",
+  innout:"In-N-Out Burger",
 };
 function wikiURL(lm){
   const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
