@@ -13,7 +13,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <script>
 (function(){
-  var BUILD_ID = "2026-06-11k";                       // ← newest published build
+  var BUILD_ID = "2026-06-11l";                       // ← newest published build
   try{
     var here = new URL(location.href);
     if (here.searchParams.get("v") === BUILD_ID) return;   // already on latest
@@ -492,15 +492,15 @@
 // Each day: route (where → where), an optional note, the hotel id we sleep at,
 // stops (landmark ids we visit), and a fly target (city / bounds / landmark).
 const ITINERARY = [
-  { day:1, date:"Wed 6/17", leg:"San Francisco", route:"Boston → San Francisco", note:"Fly in & settle", hotel:"hotel_sf", city:"sf", stops:[] },
-  { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"Explore the city", hotel:"hotel_sf", city:"sf", stops:[] },
-  { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:[] },
-  { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["santabarbara","malibupier"] },
-  { day:5, date:"Sun 6/21", leg:"Los Angeles & Anaheim", route:"Los Angeles", note:"LA day", hotel:"hotel_anaheim", city:"la", stops:[] },
-  { day:6, date:"Mon 6/22", leg:"Los Angeles & Anaheim", route:"Universal Studios", hotel:"hotel_anaheim", landmark:"universal", stops:[] },
-  { day:7, date:"Tue 6/23", leg:"San Diego", route:"Anaheim → San Diego", note:"Down the Orange County coast", hotel:"hotel_sd", bounds:[[32.6,-118.0],[33.75,-117.0]], stops:["newport","laguna","lajolla"] },
-  { day:8, date:"Wed 6/24", leg:"San Diego", route:"San Diego", note:"Coronado · Old Town · Gaslamp", hotel:"hotel_sd", city:"sd", stops:["coronado","oldtown"] },
-  { day:9, date:"Thu 6/25", leg:"San Diego", route:"Balboa Park & Zoo, then red-eye home", hotel:null, landmark:"balboa", stops:["balboa","sdzoo"] },
+  { day:1, date:"Wed 6/17", leg:"San Francisco", route:"Boston → San Francisco", note:"Land 1:25 pm at SFO · rental car · the Presidio for the bridge before check-in", hotel:"hotel_sf", city:"sf", stops:["ggbridge","palace"] },
+  { day:2, date:"Thu 6/18", leg:"San Francisco", route:"San Francisco", note:"A full day in the city", hotel:"hotel_sf", city:"sf", stops:["pier39","alcatraz","lombard","cablecar","ferrybldg","chinatown","ggpark","painted"] },
+  { day:3, date:"Fri 6/19", leg:"The Coast → Solvang", route:"San Francisco → Solvang", note:"Highway 1 — the Big Sur coast drive · call Shell", hotel:"hotel_solvang", bounds:[[34.45,-122.7],[37.7,-119.9]], stops:["halfmoonbay","monterey","carmel","bixby","mcway","hearst","moonstone","morro"] },
+  { day:4, date:"Sat 6/20", leg:"Los Angeles & Anaheim", route:"Solvang → Anaheim", note:"Down the coast · Malibu Farm dinner 4:45 pm", hotel:"hotel_anaheim", bounds:[[33.7,-120.4],[34.75,-117.8]], stops:["solvang","santabarbara","malibupier"] },
+  { day:5, date:"Sun 6/21", leg:"Los Angeles & Anaheim", route:"Los Angeles", note:"Hollywood · Sunset Strip · Beverly Hills · the beaches", hotel:"hotel_anaheim", city:"la", stops:["hollywood","walkoffame","tcl","chateau","carneys","mels","rodeo","rodeosteps","lacma","labrea","santamonica","venice","thirdst"] },
+  { day:6, date:"Mon 6/22", leg:"Los Angeles & Anaheim", route:"Universal Studios", note:"Griffith Park hike · Universal Studios · Toothsome dinner 5:30 pm", hotel:"hotel_anaheim", landmark:"universal", stops:["griffith","universal"] },
+  { day:7, date:"Tue 6/23", leg:"San Diego", route:"Anaheim → San Diego", note:"Down the Orange County coast", hotel:"hotel_sd", bounds:[[32.6,-118.0],[33.75,-117.0]], stops:["newport","laguna","encinitas","lajolla"] },
+  { day:8, date:"Wed 6/24", leg:"San Diego", route:"San Diego", note:"Embarcadero · Gaslamp · Coronado · Old Town", hotel:"hotel_sd", city:"sd", stops:["seaport","gaslamp","littleitaly","coronado","oldtown"] },
+  { day:9, date:"Thu 6/25", leg:"San Diego", route:"Balboa Park & Zoo, then red-eye home", note:"Flight 8:40 pm SAN → BOS", hotel:null, landmark:"balboa", stops:["balboa","sdzoo"] },
 ];
 
 /* ═══════ CITIES ═══════ */
@@ -697,6 +697,56 @@ const LANDMARKS = [
   hist:"Opened in 1999 — the first Legoland outside Europe — built around Miniland USA, a tiny America rebuilt brick by brick.",
   fact:"Miniland alone uses about 32 million Lego bricks.",
   tip:"" },
+
+// ── added from the trip notes (California.xlsx) ──
+{ id:"painted", city:"sf", name:"Painted Ladies · Alamo Square", cat:"Victorian houses", lat:37.7763, lon:-122.4326,
+  hist:"A row of pastel Victorian houses facing Alamo Square, framed against the downtown skyline — the classic San Francisco postcard.",
+  fact:"Seven “Painted Ladies” in a row, built in the 1890s and famous from dozens of TV shows.",
+  tip:"710–720 Steiner St; the park lawn across the street has the best view." },
+{ id:"chateau", city:"la", name:"Chateau Marmont", cat:"Sunset Strip landmark", lat:34.0980, lon:-118.3704,
+  hist:"A castle-like hotel perched above the Sunset Strip since 1929 — Hollywood’s most legendary hideaway.",
+  fact:"It was modeled on a real château in France’s Loire Valley.",
+  tip:"8221 Sunset Blvd. Carney’s hot dogs and the 24-hr Mel’s Drive-In are right along the Strip." },
+{ id:"rodeo", city:"la", name:"Rodeo Drive", cat:"Beverly Hills shopping", lat:34.0682, lon:-118.4019,
+  hist:"Beverly Hills’ famously glitzy luxury shopping street.",
+  fact:"Free trolley tours roll from the corner of Rodeo & Dayton Way, 11:30–4:30.",
+  tip:"" },
+{ id:"rodeosteps", city:"la", name:"Rodeo Drive Steps · Two Rodeo", cat:"European-style lane", lat:34.0673, lon:-118.4023,
+  hist:"Two Rodeo is a cobblestone, European-style lane off Rodeo Drive with the photogenic “Spanish Steps.”",
+  fact:"The best photos come early on a weekend morning, before the crowds.",
+  tip:"Around 9800 Wilshire Blvd / 2 Rodeo Dr." },
+{ id:"lacma", city:"la", name:"LACMA · Urban Light", cat:"Public art", lat:34.0639, lon:-118.3590,
+  hist:"A “forest” of 202 antique cast-iron street lamps outside the Los Angeles County Museum of Art.",
+  fact:"It glows after dark and is one of the most-photographed spots in the city.",
+  tip:"On Wilshire Blvd, right beside the La Brea Tar Pits." },
+{ id:"tcl", city:"la", name:"TCL Chinese Theatre", cat:"Movie palace", lat:34.1022, lon:-118.3405,
+  hist:"The grand 1927 Hollywood movie palace, with movie stars’ hand- and footprints set into the forecourt.",
+  fact:"It stands beside the Dolby Theatre, home of the Academy Awards.",
+  tip:"6925 Hollywood Blvd, on the Walk of Fame." },
+{ id:"thirdst", city:"la", name:"Third Street Promenade", cat:"Pedestrian street", lat:34.0152, lon:-118.4963,
+  hist:"A lively, car-free shopping street in Santa Monica, full of street performers.",
+  fact:"There’s a rooftop food court with great views.",
+  tip:"3rd St between Broadway and Wilshire, near the pier." },
+{ id:"carneys", city:"la", name:"Carney’s", cat:"Hot dogs", lat:34.0951, lon:-118.3742,
+  hist:"Hot dogs, burgers and chili fries served from a converted railroad dining car on the Sunset Strip.",
+  fact:"Save room for the frozen chocolate-dipped bananas.",
+  tip:"8351 Sunset Blvd." },
+{ id:"mels", city:"la", name:"Mel’s Drive-In", cat:"24-hr diner", lat:34.0903, lon:-118.3858,
+  hist:"A classic American diner on Sunset Blvd — burgers, milkshakes and jukebox booths, open around the clock.",
+  fact:"Open 24 hours, day or night.",
+  tip:"8585 Sunset Blvd." },
+{ id:"seaport", city:"sd", name:"Seaport Village", cat:"Waterfront shops", lat:32.7095, lon:-117.1709,
+  hist:"A waterfront village of shops and eateries on San Diego Bay, right along the Embarcadero.",
+  fact:"It sits beside the USS Midway and the harbor cruises.",
+  tip:"849 W Harbor Dr." },
+{ id:"gaslamp", city:"sd", name:"Gaslamp Quarter", cat:"Historic district", lat:32.7112, lon:-117.1599,
+  hist:"San Diego’s lively historic downtown — Victorian buildings, restaurants and old-fashioned gas lamps.",
+  fact:"Sixteen square blocks, an easy walk from the bay.",
+  tip:"" },
+{ id:"littleitaly", city:"sd", name:"Little Italy Food Hall", cat:"Food hall", lat:32.7237, lon:-117.1693,
+  hist:"A buzzy food hall in San Diego’s Little Italy with several stalls under one roof — something for everyone.",
+  fact:"Steps from the Saturday Little Italy Mercato farmers’ market.",
+  tip:"550 W Date St." },
 ];
 
 /* ═══════ INTERESTS (one bucket per famous landmark, for the filter) ═══════ */
@@ -713,6 +763,9 @@ const INTEREST = {
   venice:"Beaches", malibupier:"Beaches", getty:"Art & Odd", disneyland:"Rides & Parks",
   sdzoo:"Animals", balboa:"Science & Space", midway:"History", coronado:"Beaches",
   lajolla:"Animals", seaworld:"Animals", oldtown:"History", legoland:"Rides & Parks",
+  painted:"Icons", chateau:"Icons", rodeo:"Icons", rodeosteps:"Icons", tcl:"Icons",
+  seaport:"Icons", gaslamp:"Icons", lacma:"Art & Odd", thirdst:"Rides & Parks",
+  carneys:"Food", mels:"Food", littleitaly:"Food",
 };
 
 /* ═══════ HIDDEN GEMS — quirky, lesser-known (off by default) ═══════ */
@@ -947,6 +1000,12 @@ const WISH = [
     about:"The San Diego headquarters of Legion American Jiu-Jitsu, a respected competition BJJ team, up on Miramar Road.",
     address:"7550 Miramar Rd, Ste 330, San Diego, CA 92126",
     url:"https://legionsandiego.com/" },
+  { id:"innout", who:"A", name:"In-N-Out Burger", cat:"Burgers",
+    region:"Fisherman’s Wharf, SF", lat:37.8074, lon:-122.4172,
+    about:"California’s cult-favorite burger chain — simple, fresh and cheap, with a not-so-secret menu. This one is right by Fisherman’s Wharf.",
+    fact:"Order it “Animal Style” for grilled onions and extra sauce.",
+    address:"333 Jefferson St, San Francisco, CA 94133",
+    url:"https://www.in-n-out.com/" },
 ];
 
 /* ═══════ HOTELS — where we're staying (from the itinerary) ═══════════════════
@@ -1265,7 +1324,10 @@ function flyTo(target){
 function flyToCity(key){ flyTo(fitBounds(CITIES[key].bounds)); }
 function flyToLandmark(id){
   const lm=byId(id); if(!lm) return;
-  const w = lm.city==="coast" ? 110 : 16;
+  // context markers only show at the regional/overview zoom — flying closer would hide them
+  const w = lm.tier==="context" ? 220
+          : lm.city==="coast"   ? 110
+          : 16;
   const cw=svg.clientWidth||1, ch=svg.clientHeight||1, h=w*ch/cw;
   flyTo({x:px(lm.lon)-w/2, y:py(lm.lat)-h/2, w, h});
 }
@@ -1434,6 +1496,11 @@ const WIKI = {
   grandcanyon:"Grand Canyon", shasta:"Mount Shasta", hoover:"Hoover Dam",
   seattle:"Seattle", portland:"Portland, Oregon", sacramento:"Sacramento, California",
   reno:"Reno, Nevada", lasvegas:"Las Vegas", phoenix:"Phoenix, Arizona", tijuana:"Tijuana",
+  painted:"Painted Ladies", chateau:"Chateau Marmont", rodeo:"Rodeo Drive",
+  rodeosteps:"Two Rodeo Drive", lacma:"Urban Light (sculpture)", tcl:"Grauman's Chinese Theatre",
+  thirdst:"Third Street Promenade", seaport:"Seaport Village, San Diego",
+  gaslamp:"Gaslamp Quarter, San Diego", carneys:"Carney's", mels:"Mel's Drive-In",
+  littleitaly:"Little Italy, San Diego",
 };
 function wikiURL(lm){
   const q = WIKI[lm.id] || lm.name.split("·")[0].trim();
